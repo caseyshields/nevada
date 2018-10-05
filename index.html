@@ -5,10 +5,19 @@
     <meta name="viewport" content="width=device-width">
     <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
     <title>GIS Processing Eperiments</title>
+    <style>
+        path {
+            color: black;
+            fill: none;
+        }
+        svg {
+            background-color:white;
+        }
+    </style>
 </head>
 <body>
     <h1>Albers Projection</h1>
-    <svg id="svg-map" width="500" height="300"></svg>
+    <svg id="svg-map" width="512" height="512"></svg>
     <script>
         // select and size the SVG
         var svg = d3.select("svg#svg-map");
@@ -16,12 +25,14 @@
         var h = +svg.attr("height");
         var cities, sales, color, geo;
 
-        // create the SVG path generator with an Albers projection
-        var projection = d3.geoAlbersUsa() // d3.geo.albersUsa()
-                    .translate([w/2, h/2])
-                    .scale(w);
-                    // .precision(0.1);
-        var path = d3.geoPath(projection); // d3.geo.path(projection);
+        // // create the SVG path generator with an Albers projection
+        // var projection = d3.geoAlbersUsa() // d3.geo.albersUsa()
+        //             .translate([w/2, h/2])
+        //             .scale(w);
+        //             // .precision(0.1);
+        // var path = d3.geoPath(projection);
+        var path = d3.geoPath(d3.geoIdentity()); // transformed in preprocessing
+
         // TODO we should preprocess this so we don't have to do as many computations at runtime
 
         //     // create a color scale for the sales data
@@ -30,7 +41,7 @@
         //             .domain([ 0, d3.max(states, function(d){return d.sales;}) ]);
 
         // request the GeoJson data for the US states
-        d3.json("nv.json", function(error, json) {
+        d3.json("nv_screen.json", function(error, json) {
             if(error) throw error;
             geo = json;
             plot( geo);
