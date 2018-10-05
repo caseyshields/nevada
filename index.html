@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
+    <title>GIS Processing Eperiments</title>
+</head>
+<body>
+    <h1>Albers Projection</h1>
+    <svg id="svg-map" width="500" height="300"></svg>
+    <script>
+        // select and size the SVG
+        var svg = d3.select("svg#svg-map");
+        var w = +svg.attr("width");
+        var h = +svg.attr("height");
+        var cities, sales, color, geo;
+
+        // create the SVG path generator with an Albers projection
+        var projection = d3.geoAlbersUsa() // d3.geo.albersUsa()
+                    .translate([w/2, h/2])
+                    .scale(w);
+                    // .precision(0.1);
+        var path = d3.geoPath(projection); // d3.geo.path(projection);
+        // TODO we should preprocess this so we don't have to do as many computations at runtime
+
+        //     // create a color scale for the sales data
+        //     color = d3.scaleLinear()
+        //             .range(['#f7fcfd','#e5f5f9','#ccece6','#99d8c9','#66c2a4','#41ae76','#238b45','#006d2c','#00441b'])
+        //             .domain([ 0, d3.max(states, function(d){return d.sales;}) ]);
+
+        // request the GeoJson data for the US states
+        d3.json("nv.json", function(error, json) {
+            if(error) throw error;
+            geo = json;
+            plot( geo);
+        });
+
+        // draw the map of sales
+        function plot( json ) {
+
+            // only execute once everything is done loading
+            if (!json)
+                return;
+
+            // plot the sales map using the color scale
+            svg.selectAll("path")
+                .data(json.features)
+                .enter()
+                .append("path")
+                    .attr("d", path)
+                    //.attr("fill", "#666");
+                    .style("fill", function(d){
+                        var value = d.properties.value;
+                        if(value) return color(value);
+                        return "#666";
+                    });
+
+            // // plot the cities on top of the map
+            // svg.selectAll("circle")
+            //     .data(cities)
+            //     .enter()
+            //     .append("circle")
+            //         .attr( "cx", function(d){
+            //             console.log(d);return projection([d.lon,d.lat])[0];} )
+            //         .attr( "cy", function(d){return projection([d.lon,d.lat])[1];} )
+            //         .attr( "r", function(d){return Math.sqrt(parseInt(d.sales)*0.00005);} )
+            //         .attr("fill", "red");
+        }
+  </script>
+</body>
+</html>
