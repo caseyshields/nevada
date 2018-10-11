@@ -31,17 +31,15 @@
         //             .scale(w);
         //             // .precision(0.1);
         // var path = d3.geoPath(projection);
-        var path = d3.geoPath(d3.geoIdentity()); // transformed in preprocessing
-
-        // TODO we should preprocess this so we don't have to do as many computations at runtime
-
+        
         //     // create a color scale for the sales data
         //     color = d3.scaleLinear()
         //             .range(['#f7fcfd','#e5f5f9','#ccece6','#99d8c9','#66c2a4','#41ae76','#238b45','#006d2c','#00441b'])
         //             .domain([ 0, d3.max(states, function(d){return d.sales;}) ]);
 
         // request the GeoJson data for the US states
-        d3.json("nv_screen.json", function(error, json) {
+        let file = "srtm/N36W116.json";//"nv_screen.json";
+        d3.json(file, function(error, json) {
             if(error) throw error;
             geo = json;
             plot( geo);
@@ -54,18 +52,23 @@
             if (!json)
                 return;
 
+            // fit the data to the screen
+            var path = d3.geoPath( d3.geoIdentity().fitExtent([[0,0],[512,512]], json[0]));
+
             // plot the sales map using the color scale
             svg.selectAll("path")
-                .data(json.features)
+                //.data(json.features)
+                .data(json)//contours don't have the out GeoJson object
                 .enter()
                 .append("path")
                     .attr("d", path)
                     //.attr("fill", "#666");
-                    .style("fill", function(d){
-                        var value = d.properties.value;
-                        if(value) return color(value);
-                        return "#666";
-                    });
+                    .style( 'stroke', "#000" );
+                    // .style("fill", function(d){
+                    //     var value = d.properties.value;
+                    //     if(value) return color(value);
+                    //     return "#666";
+                    // });
 
             // // plot the cities on top of the map
             // svg.selectAll("circle")
@@ -79,5 +82,6 @@
             //         .attr("fill", "red");
         }
   </script>
+  
 </body>
 </html>
