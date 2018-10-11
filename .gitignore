@@ -1,3 +1,5 @@
 node_modules/
 cb_2017_32_tract_500k
+srtm/*.zip
+srtm/*.hgt
 *.zip
