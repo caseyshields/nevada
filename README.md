@@ -19,6 +19,10 @@ Experimenting the preprocessing of GIS data using D3 and other tools
  - Space shuttle radar height rasters [SRTM](https://dds.cr.usgs.gov/srtm/)
 
 ## Tools
+ - [TopoJSON](https://github.com/topojson/topojson)
  - [Open Source Geospatial Foundation](https://www.osgeo.org/)
  - Shapefile [Specification](http://www.esri.com/library/whitepapers/pdfs/shapefile.pdf)
  - [GDAL](https://www.gdal.org/)
+ - [ESRI](https://www.esri.com/en-us/arcgis/products/index)
+ - [USGS Software](https://lta.cr.usgs.gov/get_data)
+ 
