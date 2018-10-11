@@ -22,7 +22,7 @@
         fs.writeFile(
             './srtm/N36W116.json',
             JSON.stringify( contours ),
-            ()=>{console.log(done);}
+            ()=>{console.log('done');}
         );
 
     } catch(error) {
@@ -31,25 +31,25 @@
 
 function readSrtmPromise(path, N) {
     let min=0, max=0;
-    let heights = new Array(N*N);
+    let heights = [];
     // let heights = [];
     // while( heights.push([]) < N );
 
     return new Promise( (resolve, reject) => {
         fs.createReadStream( path, {highWaterMark:N*2} )
             .on('data', function (data) {
-                for (let lat=0; lat<N; lat++) {
+                // for (let lat=0; lat<N; lat++) {
                     for (let lon=0; lon<N; lon++) {
-                        let height = data.readInt16BE( 2*lon );
+                        let height = data.readInt16BE( 2 * lon );
                         // the min 16 bit int is a sentinel value for no data
                         if (height<min && height>-32768)
                             min = height;
                         else if (height>max)
                             max = height;
-                        heights[lat*N + lon] = height;
+                        heights.push( height );
                         // heights[lat][lon] = height;
                     }
-                }
+                // }
             })
             .on('end', ()=>{
                 resolve({elevations:heights, lowest:min, highest:max});
