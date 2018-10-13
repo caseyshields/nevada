@@ -26,3 +26,5 @@ Experimenting the preprocessing of GIS data using D3 and other tools
  - [ESRI](https://www.esri.com/en-us/arcgis/products/index)
  - [USGS Software](https://lta.cr.usgs.gov/get_data)
  
+ ## Misc
+  - Some [bash](http://tldp.org/HOWTO/Bash-Prog-Intro-HOWTO.html#toc7) [guides](https://tiswww.case.edu/php/chet/bash/bashref.html)
