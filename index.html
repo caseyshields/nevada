@@ -7,11 +7,11 @@
     <title>GIS Processing Eperiments</title>
     <style>
         path {
-            color: black;
-            fill: none;
+            color: none;
+            fill: grey;
         }
         svg {
-            background-color:white;
+            background-color:black;
         }
     </style>
 </head>
@@ -39,7 +39,9 @@
                 .domain([0, 4000]);
 
         // request the GeoJson data for the US states
-        let file = "srtm/N36W116.json";//"nv_screen.json";
+        let file = "srtm/N36W116_spherical.json";
+        // let file = "srtm/N36W116.json";
+        // let file = "nv_screen.json";
         d3.json(file, function(error, json) {
             if(error) throw error;
             geo = json;
@@ -64,7 +66,7 @@
                 .append("path")
                     .attr("d", path)
                     //.attr("fill", "#666");
-                    .style( 'stroke', "#000" )
+                    //.style( 'stroke', "#000" )
                     .style("fill", function(d){
                         var value = d.value;
                         if(value) return color(value);

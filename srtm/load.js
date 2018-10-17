@@ -6,7 +6,7 @@
     const N = 1201;
 
     try {
-        let steps = d3.range(0, 12).map((x)=>{return x*300;});
+        let steps = d3.range(0, 32).map((x)=>{return x*150 - 600;});
         console.log( steps );
         
         let map = await readSrtmPromise(path, N);
@@ -29,6 +29,7 @@
         let minLatitude = -116;
         let arcseconds = 60*60;
         let resolution = 3;
+
         // let img2wgs = d3.geoProjection(
         //     function(x, y) {
         //         return [minLongitude + (x*resolution/arcseconds),
@@ -43,13 +44,20 @@
         let img2wgs = d3.geoIdentity()
                 .scale(resolution/arcseconds)
                 .translate([minLongitude, minLatitude]);
-        let latlon = d3.geoProject(contours, img2wgs);
-        // what the hell am I doing wrong, for every possible way of applying a projection?...
+
+        let newContours = [];
+        for(let i in contours) {
+            let geometry = d3.geoProject(contours[i], img2wgs);
+            if (geometry) {
+                newContours.push( geometry );
+                newContours[i].value = steps[i];
+            }
+        }
 
         // write out the countours in word coordinates
         fs.writeFile(
             './srtm/N36W116_spherical.json',
-            JSON.stringify( latlon ),
+            JSON.stringify( newContours ),
             ()=>{console.log('done');}
         );
         // TODO print out separate contours for different elevations
