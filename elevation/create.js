@@ -6,7 +6,7 @@
     const N = 1201;
 
     try {
-        let steps = d3.range(0, 32).map((x)=>{return x*150 - 600;});
+        let steps = d3.range(0, 64).map((x)=>{return x*75 - 600;});
         console.log( steps );
         
         let map = await readSrtmPromise(path, N);
