@@ -1,7 +1,7 @@
 (async function () {
 
     let fs = require('fs');
-    let d3 = require('d3');
+    let d3 = Object.assign( require('d3'), require('d3-geo-projection') );
     let path = './srtm/N36W116.hgt';
     const N = 1201;
 
@@ -29,18 +29,27 @@
         let minLatitude = -116;
         let arcseconds = 60*60;
         let resolution = 3;
-        let img2llh = d3.geoProjection({
-            function(x, y) {
-                return [minLongitude + (x*resolution/arcseconds),
-                    minLatitude + (y*resolution/arcseconds) ];
-            }
-        })
-        let latlon = d3.geoProject(contours, toLatLon);
+        // let img2wgs = d3.geoProjection(
+        //     function(x, y) {
+        //         return [minLongitude + (x*resolution/arcseconds),
+        //                 minLatitude + (y*resolution/arcseconds) ];
+        //     });
+        // let img2wgs = d3.geoTransform({
+        //     point: function(x, y) {
+        //         this.stream.point(minLongitude + (x*resolution/arcseconds),
+        //                 minLatitude + (y*resolution/arcseconds) );
+        //     }
+        // });
+        let img2wgs = d3.geoIdentity()
+                .scale(resolution/arcseconds)
+                .translate([minLongitude, minLatitude]);
+        let latlon = d3.geoProject(contours, img2wgs);
+        // what the hell am I doing wrong, for every possible way of applying a projection?...
 
         // write out the countours in word coordinates
         fs.writeFile(
             './srtm/N36W116_spherical.json',
-            JSON.stringify( contours ),
+            JSON.stringify( latlon ),
             ()=>{console.log('done');}
         );
         // TODO print out separate contours for different elevations
