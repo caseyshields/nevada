@@ -1,82 +1,82 @@
 (async function () {
 
     let fs = require('fs');
-    let d3 = Object.assign( require('d3'), require('d3-geo-projection') );
-    let path = './srtm/N36W116.hgt';
-    const N = 1201;
+    let d3 = Object.assign(
+        require('d3'),
+        require('d3-geo-projection')
+    );
 
+    // compute contours for all SRTM tiles
     try {
-        let steps = d3.range(0, 64).map((x)=>{return x*75 - 600;});
-        console.log( steps );
-        
-        let map = await readSrtmPromise(path, N);
-        console.log( 'min:'+map.lowest+' max:'+map.highest+' size:'+map.elevations.size );
-
-        let contours = d3.contours()
-            .size( [N,N] ) //cols, rows
-            .thresholds( steps )
-            (map.elevations);
-
-        // // write out the raw contours in image coordinates
-        // fs.writeFile(
-        //     './srtm/N36W116.json',
-        //     JSON.stringify( contours ),
-        //     ()=>{console.log('done');}
-        // );
-
-        // transform the contours into lat lon coordinates
-        let minLongitude = 36;
-        let minLatitude = -116;
-        let arcseconds = 60*60;
-        let resolution = 3;
-
-        // let img2wgs = d3.geoProjection(
-        //     function(x, y) {
-        //         return [minLongitude + (x*resolution/arcseconds),
-        //                 minLatitude + (y*resolution/arcseconds) ];
-        //     });
-        // let img2wgs = d3.geoTransform({
-        //     point: function(x, y) {
-        //         this.stream.point(minLongitude + (x*resolution/arcseconds),
-        //                 minLatitude + (y*resolution/arcseconds) );
-        //     }
-        // });
-        let img2wgs = d3.geoIdentity()
-                .scale(resolution/arcseconds)
-                .translate([minLongitude, minLatitude]);
-
-        let newContours = [];
-        for(let i in contours) {
-            let geometry = d3.geoProject(contours[i], img2wgs);
-            if (geometry) {
-                newContours.push( geometry );
-                newContours[i].value = steps[i];
+        for (let latitide=35; latitide<42; latitide++) {
+            for (let longitude=115; longitude<121; longitude++) {
+                let path = '../srtm3/N'+latitude+'W'+longitude+'.hgt';
+                let tile = await loadSrtmTile(path, latitude, longitude, 1201);
+                createContours( tile, 100);
             }
         }
-
-        // write out the countours in word coordinates
-        fs.writeFile(
-            './srtm/N36W116_spherical.json',
-            JSON.stringify( newContours ),
-            ()=>{console.log('done');}
-        );
-        // TODO print out separate contours for different elevations
-
     } catch(error) {
         console.log(error);
     }
 
-function readSrtmPromise(path, N) {
+function createContours(tile, step) {
+
+    // determine the elevations to contour
+    let h = tile.lowest;
+    let steps = [];
+    while (h < tile.highest) {
+        steps.push( h );
+        h+=step;
+    }
+
+    // use D3 to compute an array of contours
+    let contours = d3.contours()
+        .size( [tile.samples,tile.samples] )
+        .thresholds( steps )
+        (tile.elevations);
+
+    // construct a transform from image coordinates to latitude and longitude
+    let img2wgs = d3.geoIdentity()
+            .scale( 1.0/tile.samples )
+            .translate( [tile.longitude, tile.latitude] );
+
+    let all = [];
+    for(let i in contours) {
+
+        // transform every contour
+        let geometry = d3.geoProject(contours[i], img2wgs);
+        if (geometry) {
+            geometry.value = steps[i];
+
+            // and write it out to a file
+            let contour = 'N'+tile.latitude+'W'+tile.longitude+'H'+steps[i]+'.json';
+            fs.writeFileSync(
+                contour,
+                JSON.stringify( geometry ),
+                ()=>{console.log( 'wrote '+contour );}
+            );
+            all.push( geometry );
+        }
+    }
+
+    // also write out the whole thing
+    let contour = 'N'+tile.latitude+'W'+tile.longitude+'_all.json';
+    fs.writeFileSync(
+        contour,
+        JSON.stringify( all ),
+        ()=>{console.log( 'wrote '+contour );}
+    );
+}
+
+function loadSrtmTile(path, lat, lon, samples) {
     let min=0, max=0;
     let heights = [];
-    // let heights = [];
-    // while( heights.push([]) < N );
 
     return new Promise( (resolve, reject) => {
-        fs.createReadStream( path, {highWaterMark:N*2} )
+        fs.createReadStream( path, {highWaterMark:samples*2} )
             .on('data', function (data) {
                 // for (let lat=0; lat<N; lat++) {
-                    for (let lon=0; lon<N; lon++) {
+                    for (let lon=0; lon<samples; lon++) {
                         let height = data.readInt16BE( 2 * lon );
                         // the min 16 bit int is a sentinel value for no data
                         if (height<min && height>-32768)
@@ -89,11 +89,31 @@ function readSrtmPromise(path, N) {
                 // }
             })
             .on('end', ()=>{
-                resolve({elevations:heights, lowest:min, highest:max});
+                resolve( {
+                    latitude: lat,
+                    longitude: lon,
+                    elevations: heights,
+                    samples: samples,
+                    resolution: 3600/samples,
+                    lowest: min,
+                    highest: max } );
             } )
             .on('error', (error)=>{ reject( error ); } );
     });
 }
+})();
+// trying out some different ways to express GeoJSON transformations...
+// let img2wgs = d3.geoProjection(
+//     function(x, y) {
+//         return [minLongitude + (x*resolution/arcseconds),
+//                 minLatitude + (y*resolution/arcseconds) ];
+//     });
+// let img2wgs = d3.geoTransform({
+//     point: function(x, y) {
+//         this.stream.point(minLongitude + (x*resolution/arcseconds),
+//                 minLatitude + (y*resolution/arcseconds) );
+//     }
+// });
 
 // I don't think we should compute all the contours from one grid;
 // this will make each contour geometry very long, most of it needing to 
@@ -146,10 +166,3 @@ function readSrtmPromise(path, N) {
 //         } );
 //     // return {min, max, heights};
 // }
-
-})();
-
-// read entire file
-// let all = fs.readFile((error, data)=>{
-//     for (var lat=0; lat<1201)
-// });

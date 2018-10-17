@@ -39,9 +39,9 @@
                 .domain([0, 4000]);
 
         // request the GeoJson data for the US states
-        let file = "srtm/N36W116_spherical.json";
-        // let file = "srtm/N36W116.json";
-        // let file = "nv_screen.json";
+        let file = "elevation/N36W116_spherical.json";
+        // let file = "srtm3/N36W116.json";
+        // let file = "tracts/nv_screen.json";
         d3.json(file, function(error, json) {
             if(error) throw error;
             geo = json;
