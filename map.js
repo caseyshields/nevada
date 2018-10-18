@@ -117,19 +117,14 @@ let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
         markers = markers.enter()
             .append( 'use' )
                 .attr( 'xlink:xlink:href', function(d) {return '#'+d.glyph;} )
-                //.classed( function(d){return d.class;} )
                 .attr( 'class', function(d){return d.class;} )
-                .style( 'stroke', '#F00')
-                .style( 'stroke-width', "3")
             .merge( markers )
-            //     // .each( function(d) {
-            //     //     let p = projection([d.x, d.y]);
-            //     //     d3.select(this)
-            //     //     .attr('x', p[0])
-            //     //     .attr('y', p[1]);
-            //     // });
-                 .attr( 'x', function(d) { return projection([d.x,d.y])[0];} )
-                 .attr( 'y', function(d) { return projection([d.x,d.y])[1];} );
+                .each( function(d) {
+                    let p = projection([d.x, d.y]);
+                    d3.select(this)
+                    .attr('x', p[0])
+                    .attr('y', p[1]);
+                });
     };
 
     /** sets the array holding the map's marker data */
