@@ -19,7 +19,24 @@
 </head>
 <body>
     <!-- <h1>Nevada 2017 Tracts</h1> -->
-    <svg id="svg-map" width="960" height="500"></svg>
+    <svg id="svg-map" width="960" height="500">
+        <defs>
+            <g id="source">
+                <title> Source </title>
+                <desc> A glyph representing a source. </desc>
+                <circle r="10"></circle>
+            </g>
+            <g id="sink">
+                <title> Sink </title>
+                <desc> A glyph representing a sink. </desc>
+                <path d="M10,0 V20 M0,10 H20"></path>
+            </g>
+        </defs>
+        <!-- modern browsers can use defs in external svg files; we might want to switch to this approach as we accumulate a design library of glyphs! -->
+
+        <!-- Example use -->
+        <use x="480" y="250" xlink:href="#sink" fill="none" stroke="#F00" stroke-width="3" />
+    </svg>
     <script>
         // select and size the SVG
         var svg = d3.select("svg#svg-map");
