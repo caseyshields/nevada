@@ -6,11 +6,13 @@ let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
     let dragStart = null;
     let contours = [];
     let tracts = {features:[]};
+    let marks = [];
 
     // color scale for land height
     let color = d3.scaleQuantize()
          .range(['#ACD0A5','#94BF8B','#A8C68F','#BDCC96','#D1D7AB','#E1E4B5','#EFEBC0','#E8E1B6','#DED6A3','#D3CA9D','#CAB982','#C3A76B','#B9985A','#AA8753','#AC9A7C','#BAAE9A','#CAC3B8','#E0DED8','#F5F4F2'])
          // colors provided by 'https://en.wikipedia.org/wiki/Wikipedia:WikiProject_Maps/Conventions'
+         // TODO, how do I fix this to the representative elevations; the article has no clues...
     // let color = d3.scaleLinear()
     //     .range(['#222', '#ddd'])
         .domain([0, 4000]);
@@ -41,6 +43,10 @@ let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
     let territory = svg.append( 'g' )
         .attr( 'class', 'territory' )
         .selectAll( 'path' );
+
+    let markers = svg.append( 'g' )
+        .attr( 'class', 'markers' )
+        .selectAll( 'use' ); // TODO can you do this?
 
     // append a graticule path to the svg
     let graticule = svg.append( 'g' )
@@ -91,23 +97,45 @@ let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
             .append( 'path' )
             .merge( elevation )
                 .attr('d', path )
-                .style( 'fill', function(d){
+                .style( 'fill', function(d) {
                     if(d.value) return color(d.value);
-                    else return '#000';
+                    else return 'grey';
                 });
                 
-
         // draw the territories
         territory = territory.data( tracts.features );
         territory.exit().remove();
         territory = territory.enter()
             .append( 'path' )
-                .style( 'stroke', '#000' )
+                .style( 'stroke', 'grey' )
             .merge( territory )
                 .attr( 'd', path );
 
-        // TODO draw the targets
+        // draw the targets
+        markers = markers.data( marks );
+        markers.exit().remove();
+        markers = markers.enter()
+            .append( 'use' )
+                .attr( 'xlink:xlink:href', function(d) {return '#'+d.glyph;} )
+                //.classed( function(d){return d.class;} )
+                .attr( 'class', function(d){return d.class;} )
+                .style( 'stroke', '#F00')
+                .style( 'stroke-width', "3")
+            .merge( markers )
+            //     // .each( function(d) {
+            //     //     let p = projection([d.x, d.y]);
+            //     //     d3.select(this)
+            //     //     .attr('x', p[0])
+            //     //     .attr('y', p[1]);
+            //     // });
+                 .attr( 'x', function(d) { return projection([d.x,d.y])[0];} )
+                 .attr( 'y', function(d) { return projection([d.x,d.y])[1];} );
     };
+
+    /** sets the array holding the map's marker data */
+    map.marks = function( array ) {
+        marks = array;
+    }
 
     // these drag callbacks update a rotation applied to the projection
     function started() { dragStart = d3.mouse(this); }
