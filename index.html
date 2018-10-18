@@ -34,7 +34,7 @@
             <g id="sink">
                 <title> Sink </title>
                 <desc> A glyph representing a sink. </desc>
-                <path d="M10,0 V20 M0,10 H20"></path>
+                <path d="M10,0 H-10 M0,10 V-10"></path>
             </g>
         </defs>
         <!-- modern browsers can use defs in external svg files; we might want to switch to this approach as we accumulate a design library of glyphs! -->
@@ -53,8 +53,8 @@
         let map = createMap(svg, file);
         map.marks( [
             {x:-115, y:36, class:'stitches', glyph:'source'},
-            {x:-115, y:37, class:'stitches', glyph:'source'},
-            {x:-116, y:36, class:'stitches', glyph:'source'},
+            {x:-115, y:37, class:'stitches', glyph:'sink'},
+            {x:-116, y:36, class:'stitches', glyph:'sink'},
             {x:-116, y:37, class:'stitches', glyph:'source'},
         ]);
         // map();
