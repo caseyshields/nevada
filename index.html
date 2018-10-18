@@ -4,21 +4,34 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
     <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
+    <script src="map.js" charset="utf-8"></script>
     <title>GIS Processing Eperiments</title>
     <style>
         path {
-            color: none;
-            fill: grey;
+            color: black;
+            stroke: grey;
+            fill: none;
         }
         svg {
-            background-color:black;
+            background-color:none;
         }
     </style>
 </head>
 <body>
     <!-- <h1>Nevada 2017 Tracts</h1> -->
-    <svg id="svg-map" width="1201" height="1201"></svg>
+    <svg id="svg-map" width="600" height="600"></svg>
     <script>
+        // select and size the SVG
+        var svg = d3.select("svg#svg-map");
+        var w = +svg.attr("width");
+        var h = +svg.attr("height");
+        var cities, sales, color, geo;
+
+        let file = 'charleston.json';
+        let map = createMap(svg, file);
+        map();
+    </script>
+    <!-- <script>
         // select and size the SVG
         var svg = d3.select("svg#svg-map");
         var w = +svg.attr("width");
@@ -39,8 +52,8 @@
                 .domain([0, 4000]);
 
         // request the GeoJson data for the US states
-        let file = "elevation/N36W116_spherical.json";
-        // let file = "srtm3/N36W116.json";
+        let file = "charleston.json";
+        // let file = "srtm3/N36W116_all.json";
         // let file = "tracts/nv_screen.json";
         d3.json(file, function(error, json) {
             if(error) throw error;
@@ -84,7 +97,7 @@
             //         .attr( "r", function(d){return Math.sqrt(parseInt(d.sales)*0.00005);} )
             //         .attr("fill", "red");
         }
-  </script>
+  </script> -->
   
 </body>
 </html>
