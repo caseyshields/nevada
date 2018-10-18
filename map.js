@@ -1,43 +1,53 @@
 
 let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
-    let width = 512;
-    let height = 512;
+    var width = +svg.attr("width");
+    var height = +svg.attr("height");
     let scale = 1.0;
     let dragStart = null;
+    let contours = [];
+    let tracts = {features:[]};
 
+    // color scale for land height
+    let color = d3.scaleQuantize()
+         .range(['#ACD0A5','#94BF8B','#A8C68F','#BDCC96','#D1D7AB','#E1E4B5','#EFEBC0','#E8E1B6','#DED6A3','#D3CA9D','#CAB982','#C3A76B','#B9985A','#AA8753','#AC9A7C','#BAAE9A','#CAC3B8','#E0DED8','#F5F4F2'])
+         // colors provided by 'https://en.wikipedia.org/wiki/Wikipedia:WikiProject_Maps/Conventions'
+    // let color = d3.scaleLinear()
+    //     .range(['#222', '#ddd'])
+        .domain([0, 4000]);
+
+    // scales for screen coordinates to rotation
     var lambda = d3.scaleLinear()
         .domain([-width, width])
         .range([-180, 180]);
-
     var phi = d3.scaleLinear()
         .domain([-height, height])
         .range([90, -90]);
 
+    // Projection for central Nevada, EPSG:32108
+    // let projection = d3.geoIdentity();
+    let projection = d3.geoTransverseMercator()
+        .rotate([116 + 40 / 60, -34 - 45 / 60]);
     // let projection = d3.geoStereographic()
     //         .translate( [width/2, height/2] )
     //         .scale( width )
     //         .clipAngle( 179 );
-
-    // Projection for central Nevada, EPSG:32108
-    let projection = d3.geoTransverseMercator()
-        .rotate([116 + 40 / 60, -34 - 45 / 60]);
-    //     .fitSize( [width, height] );
-        
     let path = d3.geoPath()
         .projection( projection );
+    
+    let elevation = svg.append( 'g' )
+         .attr( 'class', 'elevation' )
+         .selectAll( 'path' );
+
+    let territory = svg.append( 'g' )
+        .attr( 'class', 'territory' )
+        .selectAll( 'path' );
 
     // append a graticule path to the svg
-    svg.append( 'path' )
+    let graticule = svg.append( 'g' )
         .attr('class', 'graticule')
-        .datum( d3.geoGraticule().step([15, 10]) );
-    
-    // let elevation = svg.append( 'g' )
-    //     .attr( 'class', 'elevation' )
-    //     .selectAll( 'path' );
-
-    // let territory = svg.append( 'g' )
-    //     .attr( 'class', 'territory' )
-    //     .selectAll( 'path' );
+        .append( 'path' )
+        .style('stroke', '#000')
+        .datum( d3.geoGraticule().step([10, 10]) );
 
     // set up the mouse interactivity
     svg.call( d3.drag()
@@ -46,45 +56,55 @@ let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
         .on( 'end', ended )
     );
 
-    // svg.call( d3.zoom()
-    //     .on('zoom', wheel )
-    // );
+    svg.call( d3.zoom()
+        .on('zoom', wheel )
+    );
 
     // svg.on( 'mousemove', move );
 
     // load the background contour
-    // d3.json( file, function(error, json) {
-    //     if (error) throw error;
-    //     plot( json );
-    // });
+    d3.json( file, function(error, json) {
+        if (error) throw error;
+        contours = json;
+        console.log('loaded elevations')
+        // projection.fitSize([512,512], contours);
+        map();
+    });
 
-    // function plot( geojson ) {
-    //     let path = d3.geoPath( projection );
-    //     elevation.append('path')
-    //         .attr(d)
-    // }
+    d3.json( 'tracts/nv.json', function(error, json) {
+        if (error) throw error;
+        console.log('loaded territory');
+        tracts = json;
+        console.log(tracts);
+        map();
+    });
 
     let map = function() {
 
         //draw the graticule
-        svg.select('.graticule')
-            .attr('d', path);
+        graticule.attr('d', path);
 
-        // TODO draw the elevations
-        // elevation.selectAll('path')
-        //     .data(contours)
-        //     .enter()
-        //     .append('path')
-        //         .attr("d", path)
-        //         //.attr("fill", "#666");
-        //         //.style( 'stroke', "#000" )
-        //         .style("fill", function(d){
-        //             var value = d.value;
-        //             if(value) return color(value);
-        //             return "#666";
-        //         });
+        // draw the elevations
+        elevation = elevation.data( contours );
+        elevation.exit().remove(); // this might happen if we lower height resolution while zooming out...
+        elevation = elevation.enter()
+            .append( 'path' )
+            .merge( elevation )
+                .attr('d', path )
+                .style( 'fill', function(d){
+                    if(d.value) return color(d.value);
+                    else return '#000';
+                });
+                
 
-        // TODO draw the territories
+        // draw the territories
+        territory = territory.data( tracts.features );
+        territory.exit().remove();
+        territory = territory.enter()
+            .append( 'path' )
+                .style( 'stroke', '#000' )
+            .merge( territory )
+                .attr( 'd', path );
 
         // TODO draw the targets
     };

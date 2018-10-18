@@ -9,7 +9,7 @@
             for (let longitude=115; longitude<121; longitude++) {
                 let path = './srtm3/N'+latitude+'W'+longitude+'.hgt';
                 let tile = await srtm.loadTile( path, latitude, longitude, 1201 );
-                contour.create( tile, 100 );
+                contour.create( tile, 19 );
             }
         }
     } catch(error) {

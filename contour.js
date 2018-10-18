@@ -4,12 +4,13 @@ let d3 = Object.assign(
     require('d3-geo-projection')
 );
 
-exports.create = function(tile, step) {
+exports.create = function(tile, count) {
 
     // determine the elevations to contour
+    let step = (tile.highest - tile.lowest)/count;
     let h = tile.lowest;
     let steps = [];
-    while (h < tile.highest) {
+    while (h <= tile.highest) {
         steps.push( h );
         h+=step;
     }
@@ -21,9 +22,14 @@ exports.create = function(tile, step) {
         (tile.elevations);
 
     // construct a transform from image coordinates to latitude and longitude
+    // let img2wgs = d3.geoProjection(
+    //     function(x, y) {
+    //         return [-tile.longitude + (x/(tile.samples)) ,
+    //                 tile.latitude + (y/(tile.samples-1)) ];
+    //     });
     let img2wgs = d3.geoIdentity()
             .scale( 1.0/tile.samples )
-            .translate( [tile.longitude, tile.latitude] );
+            .translate( [-tile.longitude, tile.latitude] );
 
     let all = [];
     for(let i in contours) {

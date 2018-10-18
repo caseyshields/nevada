@@ -8,8 +8,8 @@
     <title>GIS Processing Eperiments</title>
     <style>
         path {
-            color: black;
-            stroke: grey;
+            /* color: black; */
+            /* stroke: grey; */
             fill: none;
         }
         svg {
@@ -19,7 +19,7 @@
 </head>
 <body>
     <!-- <h1>Nevada 2017 Tracts</h1> -->
-    <svg id="svg-map" width="600" height="600"></svg>
+    <svg id="svg-map" width="960" height="500"></svg>
     <script>
         // select and size the SVG
         var svg = d3.select("svg#svg-map");
@@ -27,7 +27,7 @@
         var h = +svg.attr("height");
         var cities, sales, color, geo;
 
-        let file = 'charleston.json';
+        let file = 'elevation/N36W116_all.json';
         let map = createMap(svg, file);
         map();
     </script>
