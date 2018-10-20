@@ -5,6 +5,7 @@ let d3 = Object.assign(
 );
 
 exports.create = function(tile, count) {
+    // TODO should take an arry of desired elevation slices...
 
     // determine the elevations to contour
     let step = (tile.highest - tile.lowest)/count;

@@ -1,17 +1,24 @@
+let srtm = require('./srtm.js');
+let contour = require('./contour.js');
+
 (async function () {
 
-    let srtm = require('./srtm.js');
-    let contour = require('./contour.js');
+    try {
 
     // compute contours for all SRTM tiles
-    try {
-        for (let latitude=35; latitude<42; latitude++) {
-            for (let longitude=115; longitude<121; longitude++) {
-                let path = './srtm3/N'+latitude+'W'+longitude+'.hgt';
-                let tile = await srtm.loadTile( path, latitude, longitude, 1201 );
-                contour.create( tile, 19 );
-            }
-        }
+    //     for (let latitude=35; latitude<42; latitude++) {
+    //         for (let longitude=115; longitude<121; longitude++) {
+    //             let path = './srtm3/N'+latitude+'W'+longitude+'.hgt';
+    //             let tile = await srtm.loadTile( path, latitude, longitude, 1201 );
+    //             contour.create( tile, 19 );
+    //         }
+    //     }
+
+        // try out the resampling
+        let grid = await srtm.loadGrid( './srtm3/', 36, 38, -116, -114, 1201 );
+        let tile = srtm.resample( grid, 36, -116, 6, 1200, 1200 );
+        contour.create( tile, 10 ); // TODO add an output directory argument
+
     } catch(error) {
         console.log(error);
     }
