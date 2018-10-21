@@ -79,7 +79,7 @@ returnObj.loadGrid = async function(dir, minLat, maxLat, minLon, maxLon, samples
     grid.getCell = function( latDeg, latSec, lonDeg, lonSec ) {
         let tile = grid.getTile(latDeg, lonDeg);
         if (tile)
-            return tile.elevations[ latSec*tile.samples + lonSec ];
+            return tile.elevations[ (tile.samples-latSec-1)*tile.samples + lonSec ];
         return null;
     }
 

@@ -27,7 +27,7 @@ let assert = require('assert');
         let tile = srtm.resample( grid, 36, -116, 6, 1200, 1200 );
         // console.log( tile );
 
-        contour.create( tile, 0, 100, 4000 ); // TODO add an output directory argument
+        contour.create( tile, 0, 300, 4000 ); // TODO add an output directory argument
 
     } catch(error) {
         console.log(error);
