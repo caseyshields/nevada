@@ -4,21 +4,22 @@ let d3 = Object.assign(
     require('d3-geo-projection')
 );
 
-exports.create = function(tile, count) {
+exports.create = function(tile, min, step, max) {
     // TODO should take an arry of desired elevation slices...
 
     // determine the elevations to contour
-    let step = (tile.highest - tile.lowest)/count;
-    let h = tile.lowest;
+    // let step = (tile.highest - tile.lowest)/count;
+    // let h = tile.lowest;
+    let h = min;
     let steps = [];
-    while (h <= tile.highest) {
+    while (h <= max) {//tile.highest) {
         steps.push( h );
         h+=step;
     }
 
     // use D3 to compute an array of contours
     let contours = d3.contours()
-        .size( [tile.samples,tile.samples] )
+        .size( [tile.width,tile.height] ) // cols, rows
         .thresholds( steps )
         (tile.elevations);
 
@@ -29,8 +30,9 @@ exports.create = function(tile, count) {
     //                 tile.latitude + (y/(tile.samples-1)) ];
     //     });
     let img2wgs = d3.geoIdentity()
-            .scale( 1.0/tile.samples )
-            .translate( [-tile.longitude, tile.latitude] );
+            .scale( 1.0/tile.width ) // what about aspect ratios?
+            .translate( [tile.longitude, tile.latitude] );
+    // TODO transform into screen coordinates instead
 
     let all = [];
     for(let i in contours) {
@@ -41,9 +43,11 @@ exports.create = function(tile, count) {
             geometry.value = steps[i];
 
             // and write it out to a file
-            let contour = 'elevation/N'+tile.latitude+'W'+tile.longitude+'H'+steps[i]+'.json';
+            let pre = (tile.latitude>=0) ? 'N'+tile.latitude : 'S'+(-1*tile.latitude);
+            let suf = (tile.longitude>=0) ? 'E'+tile.longitude : 'W'+(-1*tile.longitude);
+            let path = 'elevation/'+pre+suf+'H'+steps[i]+'.json';
             fs.writeFileSync(
-                contour,
+                path,
                 JSON.stringify( geometry ),
                 ()=>{console.log( 'wrote '+contour );}
             );
@@ -52,9 +56,11 @@ exports.create = function(tile, count) {
     }
 
     // also write out the whole thing
-    let contour = 'elevation/N'+tile.latitude+'W'+tile.longitude+'_all.json';
+    let pre = (tile.latitude>=0) ? 'N'+tile.latitude : 'S'+(-1*tile.latitude);
+    let suf = (tile.longitude>=0) ? 'E'+tile.longitude : 'W'+(-1*tile.longitude);
+    let path = 'elevation/'+pre+suf+'.json';
     fs.writeFileSync(
-        contour,
+        path,
         JSON.stringify( all ),
         ()=>{console.log( 'wrote '+contour );}
     );

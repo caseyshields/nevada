@@ -1,5 +1,6 @@
 let srtm = require('./srtm.js');
 let contour = require('./contour.js');
+let assert = require('assert');
 
 (async function () {
 
@@ -15,9 +16,18 @@ let contour = require('./contour.js');
     //     }
 
         // try out the resampling
-        let grid = await srtm.loadGrid( './srtm3/', 36, 38, -116, -114, 1201 );
+        let grid = await srtm.loadGrid( './srtm3', 36, 38, -116, -114, 1201 );
+        // for (let j=36; j<38; j++)
+        //     for (let i=-116; i<-114; i++) {
+        //         let tile = grid.getTile(j, i);
+        //         assert(i==tile.longitude);
+        //         assert(j==tile.longitude);
+        //     }
+
         let tile = srtm.resample( grid, 36, -116, 6, 1200, 1200 );
-        contour.create( tile, 10 ); // TODO add an output directory argument
+        // console.log( tile );
+
+        contour.create( tile, 0, 100, 4000 ); // TODO add an output directory argument
 
     } catch(error) {
         console.log(error);

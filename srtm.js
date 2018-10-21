@@ -5,6 +5,8 @@ module.exports = srtmModule();
 function srtmModule() {
 const returnObj = {}
 
+// TODO need to add a method which downloads the SRTM tiles...
+
 // TODO I think the lats might need to be flipped...
 returnObj.loadTile = function(path, lat, lon, samples) {
     let min=0, max=0;
@@ -42,6 +44,8 @@ returnObj.loadTile = function(path, lat, lon, samples) {
 
 returnObj.loadGrid = async function(dir, minLat, maxLat, minLon, maxLon, samples) {
     let grid = {  };
+    grid.latitude = minLat;
+    grid.longitude = minLon;
     grid.width = maxLon - minLon;
     grid.height = maxLat - minLat;
 
@@ -66,24 +70,25 @@ returnObj.loadGrid = async function(dir, minLat, maxLat, minLon, maxLon, samples
 
     /** returns the tile specified by the coordinate of it's lower left corner in degrees */
     grid.getTile = function(lat, lon) {
-        if (grid.isContained(lat, lon))
-            return grid.tiles[ lat * grid.width + lon ];
-        return null;
+        if (!grid.isContained(lat, lon))
+            return null;
+        return grid.tiles[ (lat-grid.latitude) * grid.width + (lon-grid.longitude) ];
     }
 
     /** returns the specified sample */
     grid.getCell = function( latDeg, latSec, lonDeg, lonSec ) {
         let tile = grid.getTile(latDeg, lonDeg);
         if (tile)
-            return tile.elevations[ latSec*samples + lonSec];
+            return tile.elevations[ latSec*tile.samples + lonSec ];
         return null;
     }
 
     grid.getSample = function( lat, lon ) {
         let latDeg = Math.floor(lat);
         let lonDeg = Math.floor(lon);
-        let latWeight = Math.round( samples*(lat - latDeg) );
-        let lonWeight = samples*(lon - lonDeg);
+        let latSec = Math.round( (samples-1) * (lat - latDeg) );
+        let lonSec = Math.round( (samples-1) * (lon - lonDeg) );
+        return this.getCell(latDeg, latSec, lonDeg, lonSec);
     }
 
     grid.getBiLinearSample = function( lat, lon ) {
@@ -137,7 +142,7 @@ returnObj.resample = function( grid, latitude, longitude, step, width, height ) 
             let height = grid.getSample(lat, lon);
             if (height>tile.highest)
                 tile.highest = height;
-            if (height<tile.lowest)
+            if (height<tile.lowest && height!=-32768) // sentinel for no data...
                 tile.lowest = height;
 
             tile.elevations.push( height );
