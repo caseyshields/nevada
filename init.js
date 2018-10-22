@@ -29,9 +29,11 @@ let assert = require('assert');
 
         let grid = await srtm.loadGrid( './srtm3', 35, 41, -120, -114, 1201 );
         let tile = srtm.resample( grid, 35, -120, 18, 1200, 1200 );
-        contour.create( tile, 0, 500, 4000 );
+        console.log( 'min:'+tile.lowest+' max:'+tile.highest);
+        contour.create( tile, -100, 500, 4000 );
         // TODO add an output directory argument
 
+        // just try a single tile to try to isolate the flooded contours problem...
         // let path = './srtm3/N36W116.hgt';
         // let tile = await srtm.loadTile( path, 36, -116, 1201 );
         // contour.create( tile, 0, 400, 3600 );

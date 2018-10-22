@@ -29,7 +29,7 @@
 </head>
 <body>
     <h1>Nevada 2017 Tracts</h1>
-    <svg id="svg-map" width="600" height="600">
+    <svg id="svg-map" width="1201" height="1201">
         <defs>
             <g id="source">
                 <title> Source </title>
@@ -55,6 +55,7 @@
         var cities, sales, color, geo;
 
         let file = 'elevation/N35W120.json';
+        // let file = 'elevation/N36W116.json';
         let map = createMap(svg, file);
         map.marks( [
             {x:-115, y:36, class:'stitches', glyph:'source'},

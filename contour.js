@@ -30,8 +30,8 @@ exports.create = function(tile, min, step, max) {
     //                 tile.latitude + (y/(tile.samples-1)) ];
     //     });
     let img2wgs = d3.geoIdentity()
-            .scale( tile.resolution/3600.0 ) // what about aspect ratios?
-            .translate( [tile.longitude, tile.latitude] );
+            // .scale( tile.resolution/3600.0 ) // what about aspect ratios?
+            // .translate( [tile.longitude, tile.latitude] );
     // TODO transform into screen coordinates instead
 
     let all = [];

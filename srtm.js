@@ -35,6 +35,8 @@ returnObj.loadTile = function(path, lat, lon, samples) {
                     elevations: heights,
                     samples: samples,
                     resolution: 3600/samples,
+                    width: samples,
+                    height: samples,
                     lowest: min,
                     highest: max } );
             } )

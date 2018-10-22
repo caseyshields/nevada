@@ -9,15 +9,15 @@ let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
     let marks = [];
 
     // color scale for land height
-    let color = d3.scaleQuantize()
-         .range(['#ACD0A5','#94BF8B','#A8C68F','#BDCC96','#D1D7AB','#E1E4B5',//green to tan
-         '#EFEBC0','#E8E1B6','#DED6A3','#D3CA9D','#CAB982','#C3A76B','#B9985A','#AA8753',//tan to brown
-         '#AC9A7C','#BAAE9A','#CAC3B8','#E0DED8','#F5F4F2'])// brown to white
+    // let color = d3.scaleQuantize()
+    //      .range(['#ACD0A5','#94BF8B','#A8C68F','#BDCC96','#D1D7AB','#E1E4B5',//green to tan
+    //      '#EFEBC0','#E8E1B6','#DED6A3','#D3CA9D','#CAB982','#C3A76B','#B9985A','#AA8753',//tan to brown
+    //      '#AC9A7C','#BAAE9A','#CAC3B8','#E0DED8','#F5F4F2'])// brown to white
          // colors provided by 'https://en.wikipedia.org/wiki/Wikipedia:WikiProject_Maps/Conventions'
          // TODO, how do I fix this to the representative elevations; the article has no clues...
-    // let color = d3.scaleLinear()
-    //     .range(['#222', '#ddd'])
-        .domain([0, 3700]);
+    let color = d3.scaleLinear()
+        .range(['#222', '#ddd'])
+        .domain([-100, 4400]);
 
     // scales for screen coordinates to rotation
     var lambda = d3.scaleLinear()
@@ -28,9 +28,9 @@ let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
         .range([90, -90]);
 
     // Projection for central Nevada, EPSG:32108
-    // let projection = d3.geoIdentity();
-    let projection = d3.geoTransverseMercator()
-        .rotate([116 + 40 / 60, -34 - 45 / 60]);
+    let projection = d3.geoIdentity();
+    // let projection = d3.geoTransverseMercator()
+    //     .rotate([116 + 40 / 60, -34 - 45 / 60]);
     // let projection = d3.geoStereographic()
     //         .translate( [width/2, height/2] )
     //         .scale( width )
@@ -88,8 +88,8 @@ let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
 
     let map = function() {
 
-        //draw the graticule
-        graticule.attr('d', path);
+        ////draw the graticule
+        // graticule.attr('d', path);
 
         // draw the elevations
         elevation = elevation.data( contours );
@@ -98,34 +98,35 @@ let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
             .append( 'path' )
             .merge( elevation )
                 .attr('d', path )
-                .style('stroke', function(d) { //'fill', function(d) {
+                .style('stroke', 'black' )
+                .style('fill', function(d) { //'stroke'/'fill'
                         if(d.value) return color(d.value);
-                        else return 'grey';
+                        else return 'red';
                     });
                 
-        // draw the territories
-        territory = territory.data( tracts.features );
-        territory.exit().remove();
-        territory = territory.enter()
-            .append( 'path' )
-                .style( 'stroke', 'grey' )
-            .merge( territory )
-                .attr( 'd', path );
+        //// draw the territories
+        // territory = territory.data( tracts.features );
+        // territory.exit().remove();
+        // territory = territory.enter()
+        //     .append( 'path' )
+        //         .style( 'stroke', 'grey' )
+        //     .merge( territory )
+        //         .attr( 'd', path );
 
-        // draw the targets
-        markers = markers.data( marks );
-        markers.exit().remove();
-        markers = markers.enter()
-            .append( 'use' )
-                .attr( 'xlink:xlink:href', function(d) {return '#'+d.glyph;} )
-                .attr( 'class', function(d){return d.class;} )
-            .merge( markers )
-                .each( function(d) {
-                    let p = projection([d.x, d.y]);
-                    d3.select(this)
-                    .attr('x', p[0])
-                    .attr('y', p[1]);
-                });
+        //// draw the targets
+        // markers = markers.data( marks );
+        // markers.exit().remove();
+        // markers = markers.enter()
+        //     .append( 'use' )
+        //         .attr( 'xlink:xlink:href', function(d) {return '#'+d.glyph;} )
+        //         .attr( 'class', function(d){return d.class;} )
+        //     .merge( markers )
+        //         .each( function(d) {
+        //             let p = projection([d.x, d.y]);
+        //             d3.select(this)
+        //             .attr('x', p[0])
+        //             .attr('y', p[1]);
+        //         });
     };
 
     /** sets the array holding the map's marker data */
