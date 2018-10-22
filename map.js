@@ -71,16 +71,15 @@ let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
     // svg.on( 'mousemove', move );
 
     // load the background contour
-    d3.json( file, function(error, json) {
-        if (error) throw error;
+    d3.json( file ).then(function(json) {
         contours = json;
         console.log('loaded elevations')
         // projection.fitSize([512,512], contours);
         map();
     });
 
-    d3.json( 'tracts/nv.json', function(error, json) {
-        if (error) throw error;
+    d3.json( 'tracts/nv.json' ).then( function(json) {
+        // if (error) throw error;
         console.log('loaded territory');
         tracts = json;
         console.log(tracts);
@@ -99,14 +98,10 @@ let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
             .append( 'path' )
             .merge( elevation )
                 .attr('d', path )
-                .style('stroke', function(d) {
+                .style('stroke', function(d) { //'fill', function(d) {
                         if(d.value) return color(d.value);
                         else return 'grey';
                     });
-                // .style( 'fill', function(d) {
-                //     if(d.value) return color(d.value);
-                //     else return 'grey';
-                // });
                 
         // draw the territories
         territory = territory.data( tracts.features );
