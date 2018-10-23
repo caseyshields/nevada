@@ -135,7 +135,8 @@ returnObj.resample = function( grid, latitude, longitude, step, width, height ) 
     let d = step/3600;
 
     // sample the specified grid
-    for (let y=0; y<height; y++) {
+    for (let y=height; y>=0; y--) { // flip for resample so polygon winding order doesn't get messed up in subsequent processing!
+    // for (let y=0; y<height; y++) {
         let lat = latitude + y * d;
         for (let x=0; x<width; x++) {
             let lon = longitude + x * d;

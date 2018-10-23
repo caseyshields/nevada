@@ -21,7 +21,34 @@ exports.create = function(tile, min, step, max) {
     let contours = d3.contours()
         .size( [tile.width,tile.height] ) // cols, rows
         .thresholds( steps )
-        (tile.elevations);
+        (tile.elevations).map(convert);
+
+    // var lonscale = tile.resolution/3600.0;
+    // var latscale = -tile.resolution/3600.0;
+    // var latoffset = tile.latitude + (tile.resolution*tile.height)/3600;
+    // // ugh should be using let, but how do I get them visible in scope?
+
+    function convert(d) {
+        var p = {
+            type: "Polygon",
+            coordinates: //d3.merge(
+                d.coordinates.map(function(polygon) {
+                return polygon.map( function(ring) {
+                    return ring.map( function(point) {
+                        return [
+                            tile.longitude + (point[0]*tile.resolution/3600.0),
+                            tile.latitude + (tile.resolution*tile.height)/3600 - (point[1]*tile.resolution/3600.0) ];
+                    }).reverse();
+                })
+            })//)
+        };
+
+        p = d3.geoStitch(p);
+
+        return p.coordinates.length 
+            ? {type:"Polygon", coordinates: p.coordinates, value: d.value}
+            : {type:"Sphere", value: d.value};
+    }
 
     // construct a transform from image coordinates to latitude and longitude
     // let img2wgs = d3.geoProjection(

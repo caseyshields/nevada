@@ -9,6 +9,7 @@ Experimenting the preprocessing of GIS data using D3 and other tools
  - Contour map [tutorial](https://www.axismaps.com/blog/2018/04/contours-in-browser/)
  - Another [topographic map](https://bl.ocks.org/hugolpz/6279966) scripted by Lopez Hugo
 - [StatePlanes](https://github.com/veltman/d3-stateplane) by Noah Veltman
+- Here is an Bostock [example](https://bl.ocks.org/mbostock/83c0be21dba7602ee14982b020b12f51) which transforms contour coordinates back into spherical
 
 ## Resources
  - [MapShaper](https://mapshaper.org/)
