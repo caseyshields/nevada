@@ -33,7 +33,7 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
     // let projection = d3.geoIdentity();
     let projection = d3.geoTransverseMercator()
         .rotate([116 + 40 / 60, -34 - 45 / 60])
-        //.scale(width)
+        .scale(width)
         //.center([-117.0, 39.0]) // I really have no idea how else this method could be used but apparently this is wrong? It actually crashes the tab!
         //.postClip()
         ;
@@ -102,8 +102,9 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
                 .style('fill', function(d) {
                         if(d.value) return color(d.value);
                         else return 'black';
-                    });
-                //.sort(function(a,b){return b.value-a.value;});
+                    })
+                .order(function(a,b){return a.value-b.value;});
+                // so sorting works here but not when geometriesthis works but I don't 
         //currently the exit block is never called, however we might want to eventually remove contours when we zoom out...
     };
 
@@ -152,8 +153,10 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
      */
     map.addContour = function( contour ) {
         contours.push(contour);
-        elevation.sort( function(a,b) {
-            return (+a.value)-(+b.value);} ); // TODO use SVG z height instead?
+        contours.sort( function(a,b){return a.value-b.value;} );
+        // ERROR this doesn't matter because my D3 selection is keyed to insertion order, so this will still just jumble it up!
+        //elevation = elevation.sort( function(a,b) { return a.value-b.value;} );
+        // TODO is there SVG z layer attribute?
         map.drawContours();
     };
 
