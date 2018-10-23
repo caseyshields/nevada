@@ -20,7 +20,8 @@ let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
         .domain([-100, 4400]);
 
     // TODO once we project into screen coordinates we can move the SVG's view box around
-    // svg.attr('viewbox', [0,0,width, height]);
+    // svg.attr('viewbox', [-120,42,6,7]);
+    //svg.attr('viewbox', [0,0,width, height]);
 
     // scales for screen coordinates to rotation
     var lambda = d3.scaleLinear()
@@ -75,7 +76,7 @@ let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
 
     // load the background contour
     d3.json( file ).then(function(json) {
-        contours = json;
+        contours.push(json);
         console.log('loaded elevations')
         // projection.fitSize([512,512], contours);
         map();
@@ -85,14 +86,14 @@ let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
         // if (error) throw error;
         console.log('loaded territory');
         tracts = json;
-        console.log(tracts);
+        // console.log(tracts);
         map();
     });
 
     let map = function() {
 
-        //draw the graticule
-        graticule.attr('d', path);
+        //// draw the graticule
+        // graticule.attr('d', path);
 
         // draw the elevations
         elevation = elevation.data( contours );
@@ -106,15 +107,15 @@ let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
                         if(d.value) return color(d.value);
                         else return 'red';
                     });
-                
-        // draw the territories
-        territory = territory.data( tracts.features );
-        territory.exit().remove();
-        territory = territory.enter()
-            .append( 'path' )
-                .style( 'stroke', 'grey' )
-            .merge( territory )
-                .attr( 'd', path );
+
+        // // draw the territories
+        // territory = territory.data( tracts.features );
+        // territory.exit().remove();
+        // territory = territory.enter()
+        //     .append( 'path' )
+        //         .style( 'stroke', 'grey' )
+        //     .merge( territory )
+        //         .attr( 'd', path );
 
         //// draw the targets
         // markers = markers.data( marks );

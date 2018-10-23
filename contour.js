@@ -5,34 +5,28 @@ let d3 = Object.assign(
 );
 
 exports.create = function(tile, min, step, max) {
-    // TODO should take an arry of desired elevation slices...
+    // TODO should take an array of desired elevation slices...
 
     // determine the elevations to contour
-    // let step = (tile.highest - tile.lowest)/count;
-    // let h = tile.lowest;
     let h = min;
     let steps = [];
-    while (h <= max) {//tile.highest) {
+    while (h <= max) {
         steps.push( h );
         h+=step;
     }
 
     // use D3 to compute an array of contours
     let contours = d3.contours()
-        .size( [tile.width,tile.height] ) // cols, rows
+        .size( [tile.width,tile.height] )
         .thresholds( steps )
         (tile.elevations).map(convert);
 
-    // var lonscale = tile.resolution/3600.0;
-    // var latscale = -tile.resolution/3600.0;
-    // var latoffset = tile.latitude + (tile.resolution*tile.height)/3600;
-    // // ugh should be using let, but how do I get them visible in scope?
-
+    // Bafflingly, converting the coordinates appears to reverse some, not all, of the polygons, which cause fill flooding to the entire plane.
+    // I need to study this problem more...
     function convert(d) {
         var p = {
             type: "Polygon",
-            coordinates: //d3.merge(
-                d.coordinates.map(function(polygon) {
+            coordinates: d3.merge( d.coordinates.map(function(polygon) {
                 return polygon.map( function(ring) {
                     return ring.map( function(point) {
                         return [
@@ -40,96 +34,90 @@ exports.create = function(tile, min, step, max) {
                             tile.latitude + (tile.resolution*tile.height)/3600 - (point[1]*tile.resolution/3600.0) ];
                     }).reverse();
                 })
-            })//)
+            }))
         };
 
+        // no antimeridian crossed in my dataset
         p = d3.geoStitch(p);
 
         return p.coordinates.length 
             ? {type:"Polygon", coordinates: p.coordinates, value: d.value}
             : {type:"Sphere", value: d.value};
-    }
+    } // cribbed from https://bl.ocks.org/mbostock/83c0be21dba7602ee14982b020b12f51
 
+    // previous attempts;
+    let projection = d3.geoIdentity()
+    //         .scale( tile.resolution/3600.0 ) // what about aspect ratios?
+    //         .translate( [tile.longitude, tile.latitude] );
     // construct a transform from image coordinates to latitude and longitude
-    // let img2wgs = d3.geoProjection(
+    // let projection = d3.geoProjection(
     //     function(x, y) {
     //         return [-tile.longitude + (x/(tile.samples)) ,
     //                 tile.latitude + (y/(tile.samples-1)) ];
     //     });
-    let img2wgs = d3.geoIdentity()
-            // .scale( tile.resolution/3600.0 ) // what about aspect ratios?
-            // .translate( [tile.longitude, tile.latitude] );
-    // TODO transform into screen coordinates instead
+    // let projection = d3.geoTransform({
+    //     point: function(x, y) {
+    //         this.stream.point(minLongitude + (x*resolution/arcseconds),
+    //                 minLatitude + (y*resolution/arcseconds) );
+    //     }
+    // });
 
-    let all = [];
+    
+    // // geoProject() doesn't handle the output of d3-contour?
+    // let geometry = d3.geoProject(contours, projection);
+    // for(let i in geometry)
+    //     geometry[i].value = steps[i];
+    // let pre = (tile.latitude>=0) ? 'N'+tile.latitude : 'S'+(-1*tile.latitude);
+    // let suf = (tile.longitude>=0) ? 'E'+tile.longitude : 'W'+(-1*tile.longitude);
+    // let path = 'elevation/'+pre+suf+'.json';
+    // fs.writeFileSync(
+    //     path,
+    //     JSON.stringify( geometry ),
+    //     ()=>{console.log( 'wrote '+contour );}
+    // );
+    // // are my contour examples old?
+    
+    // // let all = [];
+    // for(let i in contours) {
+
+    //     // transform every contour
+    //     let geometry = d3.geoProject(contours[i], projection);
+    //     if (geometry) {
+    //         geometry.value = steps[i];
+
+    //         // and write it out to a file
+    //         let pre = (tile.latitude>=0) ? 'N'+tile.latitude : 'S'+(-1*tile.latitude);
+    //         let suf = (tile.longitude>=0) ? 'E'+tile.longitude : 'W'+(-1*tile.longitude);
+    //         let path = 'elevation/'+pre+suf+'H'+steps[i]+'.json';
+    //         fs.writeFileSync(
+    //             path,
+    //             JSON.stringify( geometry ),
+    //             ()=>{console.log( 'wrote '+contour );}
+    //         );
+    //         // all.push( geometry );
+    //     }
+    // }
+
     for(let i in contours) {
-
-        // transform every contour
-        let geometry = d3.geoProject(contours[i], img2wgs);
-        if (geometry) {
-            geometry.value = steps[i];
-
-            // and write it out to a file
-            let pre = (tile.latitude>=0) ? 'N'+tile.latitude : 'S'+(-1*tile.latitude);
-            let suf = (tile.longitude>=0) ? 'E'+tile.longitude : 'W'+(-1*tile.longitude);
-            let path = 'elevation/'+pre+suf+'H'+steps[i]+'.json';
-            fs.writeFileSync(
-                path,
-                JSON.stringify( geometry ),
-                ()=>{console.log( 'wrote '+contour );}
-            );
-            all.push( geometry );
-        }
+        contours[i].value = steps[i];
+        let pre = (tile.latitude>=0) ? 'N'+tile.latitude : 'S'+(-1*tile.latitude);
+        let suf = (tile.longitude>=0) ? 'E'+tile.longitude : 'W'+(-1*tile.longitude);
+        let path = 'elevation/'+pre+suf+'H'+steps[i]+'.json';
+        fs.writeFileSync(
+            path,
+            JSON.stringify( contours[i] ),
+            ()=>{console.log( 'wrote '+path );}
+        );
     }
 
-    // also write out the whole thing
-    let pre = (tile.latitude>=0) ? 'N'+tile.latitude : 'S'+(-1*tile.latitude);
-    let suf = (tile.longitude>=0) ? 'E'+tile.longitude : 'W'+(-1*tile.longitude);
-    let path = 'elevation/'+pre+suf+'.json';
-    fs.writeFileSync(
-        path,
-        JSON.stringify( all ),
-        ()=>{console.log( 'wrote '+contour );}
-    );
+
+    // // also write out the whole thing
+    // let pre = (tile.latitude>=0) ? 'N'+tile.latitude : 'S'+(-1*tile.latitude);
+    // let suf = (tile.longitude>=0) ? 'E'+tile.longitude : 'W'+(-1*tile.longitude);
+    // let path = 'elevation/'+pre+suf+'.json';
+    // fs.writeFileSync(
+    //     path,
+    //     JSON.stringify( all ),
+    //     ()=>{console.log( 'wrote '+contour );}
+    // );
 }
-
-// trying out some different ways to express GeoJSON transformations...
-// let img2wgs = d3.geoProjection(
-//     function(x, y) {
-//         return [minLongitude + (x*resolution/arcseconds),
-//                 minLatitude + (y*resolution/arcseconds) ];
-//     });
-// let img2wgs = d3.geoTransform({
-//     point: function(x, y) {
-//         this.stream.point(minLongitude + (x*resolution/arcseconds),
-//                 minLatitude + (y*resolution/arcseconds) );
-//     }
-// });
-
-// function readSrtm(path, N, fn) {
-//     let min=0, max=0;
-//     let heights = [];
-//     while( heights.push([]) < N );
-//     fs.createReadStream( path, {highWaterMark:N*2} )
-//         .on('data',
-//             function (data) {
-//                 for (let lat=0; lat<N; lat++) {
-//                     for (let lon=0; lon<N; lon++) {
-//                         let height = data.readInt16BE( 2*lon );
-//                         if (height<min && height>-32768) min = height;
-//                         else if (height>max) max = height;
-//                         heights[lat][lon] = height;
-//                     }
-//                 }
-//             })
-//         .on('end', function() {
-//             console.log( 'min:'+min+' max:'+max );
-//             // for (let i=0; i<N; i++)
-//             //     console.log( heights[0][i]+'\t' );
-//             fn(heights, min, max);
-//         })
-//         .on( 'error', function(err) {
-//             console.log(err);
-//         } );
-//     // return {min, max, heights};
-// }
