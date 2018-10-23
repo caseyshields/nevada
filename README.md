@@ -1,5 +1,7 @@
 # nevada
 Experimenting the preprocessing of GIS data using D3 and other tools
+Also developing a simple d3 map component.
+
 
 ![Example processed map](nv_screen.svg)
 

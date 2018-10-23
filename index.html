@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width">
     <script src="https://d3js.org/d3.v5.js" charset="utf-8"></script>
     <script src="map.js" charset="utf-8"></script>
-    <title>GIS Processing Eperiments</title>
+    <title>D3 Map Component</title>
     <style>
         path {
             /* color: black; */
@@ -54,9 +54,7 @@
         var h = +svg.attr("height");
         var cities, sales, color, geo;
 
-        let file = 'elevation/N35W120H1100.json';
-        // let file = 'elevation/N36W116.json';
-        let map = createMap(svg, file);
+        let map = createMap(svg);
         map.marks( [
             {x:-115, y:36, class:'stitches', glyph:'source'},
             {x:-115, y:37, class:'stitches', glyph:'sink'},
@@ -64,6 +62,24 @@
             {x:-116, y:37, class:'stitches', glyph:'source'},
         ]);
         map();
+
+        d3.json( 'tracts/nv.json' )
+            .then( map.addBounds );
+
+        d3.json( 'elevation/N35W120H-100.json' )
+            .then( map.addContour );
+        d3.json( 'elevation/N35W120H500.json' )
+            .then( map.addContour );
+        d3.json( 'elevation/N35W120H1100.json' )
+            .then( map.addContour );
+        d3.json( 'elevation/N35W120H1700.json' )
+            .then( map.addContour );
+        d3.json( 'elevation/N35W120H2300.json' )
+            .then( map.addContour );
+        d3.json( 'elevation/N35W120H2900.json' )
+            .then( map.addContour );
+        d3.json( 'elevation/N35W120H3500.json' )
+            .then( map.addContour );
     </script>
   
 </body>
