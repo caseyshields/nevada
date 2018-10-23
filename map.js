@@ -14,57 +14,44 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
     let tracts = {features:[]};
     let marks = [];
 
-    // color scale for land height
-    let color = d3.scaleQuantize()
-         .range(['#ACD0A5','#94BF8B','#A8C68F','#BDCC96','#D1D7AB','#E1E4B5',//green to tan
-         '#EFEBC0','#E8E1B6','#DED6A3','#D3CA9D','#CAB982','#C3A76B','#B9985A','#AA8753',//tan to brown
-         '#AC9A7C','#BAAE9A','#CAC3B8','#E0DED8','#F5F4F2'])// brown to white
-         // colors provided by 'https://en.wikipedia.org/wiki/Wikipedia:WikiProject_Maps/Conventions'
-         // TODO, how do I fix this to the representative elevations; the article has no clues...
-    // let color = d3.scaleLinear()
-    //     .range(['#222', '#ddd'])
-        .domain([-100, 4400]);
-
-    // TODO once we project into screen coordinates we can move the SVG's view box around
-    // svg.attr('viewbox', [-120,42,6,7]);
-    //svg.attr('viewbox', [0,0,width, height]);
-
-    // Projection for central Nevada, EPSG:32108
-    // let projection = d3.geoIdentity();
-    let projection = d3.geoTransverseMercator()
-        .rotate([116 + 40 / 60, -34 - 45 / 60])
-        .scale(width)
-        //.center([-117.0, 39.0]) // I really have no idea how else this method could be used but apparently this is wrong? It actually crashes the tab!
-        //.postClip()
-        ;
-
-    // let projection = d3.geoStereographic()
-    //         .translate( [width/2, height/2] )
-    //         .scale( width )
-    //         .clipAngle( 179 );
-
-    let path = d3.geoPath()
-        .projection( projection );
-    
+    // prepare selection for various parts of the svg
     let elevation = svg.append( 'g' )
          .attr( 'class', 'elevation' )
          .selectAll( 'path' );
-
     let territory = svg.append( 'g' )
         .attr( 'class', 'territory' )
         .selectAll( 'path' );
-
     let markers = svg.append( 'g' )
         .attr( 'class', 'markers' )
-        .selectAll( 'use' ); // TODO can you do this?
-
-    // append a graticule path to the svg
+        .selectAll( 'use' );
     let graticule = svg.append( 'g' )
         .attr('class', 'graticule')
         .append( 'path' )
         .style('stroke', '#000')
         .datum( d3.geoGraticule().step([10, 10]) );
 
+    // default color scale for elevation, cribbed from 'https://en.wikipedia.org/wiki/Wikipedia:WikiProject_Maps/Conventions', though there are no given corresponding heights
+    let color = d3.scaleQuantize()
+        .range(['#ACD0A5','#94BF8B','#A8C68F','#BDCC96','#D1D7AB','#E1E4B5',//green to tan
+        '#EFEBC0','#E8E1B6','#DED6A3','#D3CA9D','#CAB982','#C3A76B','#B9985A','#AA8753',//tan to brown
+        '#AC9A7C','#BAAE9A','#CAC3B8','#E0DED8','#F5F4F2'])// brown to white
+        .domain([-100, 4400]);
+
+   // TODO once we project into screen coordinates we can move the SVG's view box around
+   // svg.attr('viewbox', [-120,42,6,7]);
+   //svg.attr('viewbox', [0,0,width, height]);
+
+   // Projection for central Nevada, EPSG:32108
+   let projection = d3.geoTransverseMercator() // d3.geoIdentity();
+       .rotate([116 + 40 / 60, -34 - 45 / 60])
+       .scale(width)
+       //.center([-117.0, 39.0]) // I really have no idea how else this method could be used but apparently this is wrong? It actually crashes the tab!
+       //.postClip()
+       ;
+
+   let path = d3.geoPath()
+       .projection( projection );
+    
     // set up the mouse interactivity
     svg.call( d3.drag()
         .on( 'start', started )
@@ -126,8 +113,8 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
         markers = markers.enter()
             .append( 'use' )
                 .attr( 'xlink:xlink:href', function(d) {return '#'+d.glyph;} )
-                .attr( 'class', function(d){return d.class;} )
             .merge( markers )
+                .attr( 'class', function(d){return d.class;} )
                 .each( function(d) {
                     let p = projection([d.x, d.y]);
                     d3.select(this)
