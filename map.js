@@ -2,18 +2,18 @@
 /**
  * Factory which returns a D3 map component
  * @param {string} svg - A D3 selection holding the svg where the map will be rendered
- * @param {string} file - the relative path to the directory containing SRTM contour polygons
- * @param {string} bounds - the relative path to the file containing boundary lines
 */
 let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
     var width = +svg.attr("width");
     var height = +svg.attr("height");
-    let scale = 1.0;
-    let dragStart = null;
-    let contours = [];
-    let tracts = {features:[]};
-    let marks = [];
-
+    let contours = []; // Array of GeoJSON contour polygons
+    let tracts = {features:[]}; // GeoJSON territorial lines to be drawn
+    let marks = []; // array or markers to be displayed
+    let moved = function(screen){}; // callback for mouse movements
+    let clicked = function(mark, index, selection){}; // callback for mouse clicks
+    let scale = 1.0; // current projection scale
+    let dragStart = null; // flagg for if the mouse is currently dragging
+    
     // prepare selection for various parts of the svg
     let elevation = svg.append( 'g' )
          .attr( 'class', 'elevation' )
@@ -61,7 +61,7 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
     svg.call( d3.zoom()
         .on('zoom', wheel )
     );
-    // svg.on( 'mousemove', move );
+    //svg.on( 'mousemove', moved ); // TODO add mouse move event
 
     /** The default function invokes a render of the entire map */
     let map = function() {
@@ -91,7 +91,6 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
                         else return 'black';
                     })
                 .order(function(a,b){return a.value-b.value;});
-                // so sorting works here but not when geometriesthis works but I don't 
         //currently the exit block is never called, however we might want to eventually remove contours when we zoom out...
     };
 
@@ -113,6 +112,7 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
         markers = markers.enter()
             .append( 'use' )
                 .attr( 'xlink:xlink:href', function(d) {return '#'+d.glyph;} )
+                .on( 'click', clicked )
             .merge( markers )
                 .attr( 'class', function(d){return d.class;} )
                 .each( function(d) {
@@ -127,12 +127,14 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
     map.setColorScale = function( scale ) {
         color = scale;
         map.drawContours();
+        return map;
     }
 
     /** sets the array holding the map's marker data */
     map.marks = function( array ) {
         marks = array;
         map.drawMarks();
+        return map;
     };
 
     /** Adds the given GeoJson object to the contour render list.
@@ -141,10 +143,8 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
     map.addContour = function( contour ) {
         contours.push(contour);
         contours.sort( function(a,b){return a.value-b.value;} );
-        // ERROR this doesn't matter because my D3 selection is keyed to insertion order, so this will still just jumble it up!
-        //elevation = elevation.sort( function(a,b) { return a.value-b.value;} );
-        // TODO is there SVG z layer attribute?
         map.drawContours();
+        return map;
     };
 
     /** Adds the given geometry to the list of boundary lines
@@ -153,7 +153,28 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
     map.addBounds = function( bound ) {
         tracts.features.push(bound);
         map.drawBounds();
+        return map;
     };
+
+    // map.move = function( callback ) {
+    //     move = callback;
+    //     return map;
+    // }
+    // function move() {
+    //     if(moved) {
+    //         let screen = D3.mouse(this);
+    //         moved( screen );
+    //     }
+    // }
+
+    map.click = function( callback ) {
+        clicked = callback;
+        return map;
+    }
+    // function click( star, index, selection ) {
+    //     if( clicked )
+    //             clicked( star, index, selection );
+    // }
 
     // scales for screen coordinates to rotation
     var lambda = d3.scaleLinear()
@@ -195,6 +216,14 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
         projection.scale( scale * width );
         //projection.clipAngle( scale * 179.0 );
         map();
+    }
+
+    map.screen2sphere = function( screen ) {
+        return projection.invert( screen );
+    }
+
+    map.sphere2screen = function( sphere ) {
+        return projection( sphere );
     }
 
     return map;

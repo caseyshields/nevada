@@ -53,14 +53,19 @@
         var w = +svg.attr("width");
         var h = +svg.attr("height");
         var cities, sales, color, geo;
-
-        let map = createMap(svg);
-        map.marks( [
+        let pins = [
             {x:-115, y:36, class:'stitches', glyph:'source'},
             {x:-115, y:37, class:'stitches', glyph:'sink'},
             {x:-116, y:36, class:'stitches2', glyph:'sink'},
-            {x:-116, y:37, class:'stitches', glyph:'source'},
-        ]);
+            {x:-116, y:37, class:'stitches', glyph:'source'}
+        ];
+
+        let map = createMap(svg)
+            .marks( pins )
+            .click( function(mark, index, selection){
+                console.log(mark);}
+            );
+            
         map();
 
         // let elevationScale = d3.scaleLinear()
