@@ -4,18 +4,18 @@ let d3 = Object.assign(
     require('d3-geo-projection')
 );
 
-exports.create = function(tile, min, step, max) {
+exports.create = function(tile, steps) {
     // TODO should take an arry of desired elevation slices...
 
-    // determine the elevations to contour
-    // let step = (tile.highest - tile.lowest)/count;
-    // let h = tile.lowest;
-    let h = min;
-    let steps = [];
-    while (h <= max) {//tile.highest) {
-        steps.push( h );
-        h+=step;
-    }
+    // // determine the elevations to contour
+    // // let step = (tile.highest - tile.lowest)/count;
+    // // let h = tile.lowest;
+    // let h = min;
+    // let steps = [];
+    // while (h <= max) {//tile.highest) {
+    //     steps.push( h );
+    //     h+=step;
+    // }
 
     // use D3 to compute an array of contours
     let contours = d3.contours()

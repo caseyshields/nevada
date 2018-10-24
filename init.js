@@ -2,6 +2,8 @@ let srtm = require('./srtm.js');
 let contour = require('./contour.js');
 let assert = require('assert');
 
+
+// TODO I should extract a command line application from the nevada project explicitly for processing SRTM data...S
 (async function () {
 
     try {
@@ -16,19 +18,33 @@ let assert = require('assert');
     //     }
 
         // try out the resampling
-        let grid = await srtm.loadGrid( './srtm3', 36, 38, -116, -114, 1201 );
+        // let grid = await srtm.loadGrid( './srtm3', 36, 38, -116, -114, 1201 );
         // for (let j=36; j<38; j++)
         //     for (let i=-116; i<-114; i++) {
         //         let tile = grid.getTile(j, i);
         //         assert(i==tile.longitude);
         //         assert(j==tile.longitude);
         //     }
-
-        let tile = srtm.resample( grid, 36, -116, 6, 1200, 1200 );
+        
+        // let tile = srtm.resample( grid, 36, -116, 6, 1200, 1200 );
         // console.log( tile );
 
-        contour.create( tile, 0, 300, 4000 ); // TODO add an output directory argument
+        // contour.create( tile, 0, 100, 3600 ); // TODO add an output directory argument
 
+        let grid = await srtm.loadGrid( './srtm3', 35, 41, -120, -114, 1201 );
+
+        let tile = srtm.resample( grid, 35, -120, 36, 600, 600 );
+        console.log( 'min:'+tile.lowest+' max:'+tile.highest);
+
+        let step = (tile.highest - tile.lowest)/8;
+        let h = tile.lowest;
+        let steps = [];
+        while (h <= tile.highest) {
+            steps.push( h );
+            h+=step;
+        }
+        contour.create( tile, steps ); // TODO add an output directory argument
+        
     } catch(error) {
         console.log(error);
     }

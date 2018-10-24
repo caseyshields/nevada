@@ -9,12 +9,12 @@ let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
     let marks = [];
 
     // color scale for land height
-    let color = d3.scaleQuantize()
-         .range(['#ACD0A5','#94BF8B','#A8C68F','#BDCC96','#D1D7AB','#E1E4B5','#EFEBC0','#E8E1B6','#DED6A3','#D3CA9D','#CAB982','#C3A76B','#B9985A','#AA8753','#AC9A7C','#BAAE9A','#CAC3B8','#E0DED8','#F5F4F2'])
+    // let color = d3.scaleQuantize()
+    //      .range(['#ACD0A5','#94BF8B','#A8C68F','#BDCC96','#D1D7AB','#E1E4B5','#EFEBC0','#E8E1B6','#DED6A3','#D3CA9D','#CAB982','#C3A76B','#B9985A','#AA8753','#AC9A7C','#BAAE9A','#CAC3B8','#E0DED8','#F5F4F2'])
          // colors provided by 'https://en.wikipedia.org/wiki/Wikipedia:WikiProject_Maps/Conventions'
          // TODO, how do I fix this to the representative elevations; the article has no clues...
-    // let color = d3.scaleLinear()
-    //     .range(['#222', '#ddd'])
+    let color = d3.scaleLinear()
+        .range(['#222', '#ddd'])
         .domain([0, 4000]);
 
     // scales for screen coordinates to rotation
@@ -97,6 +97,7 @@ let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
             .append( 'path' )
             .merge( elevation )
                 .attr('d', path )
+                .style('stroke', 'black')
                 .style( 'fill', function(d) {
                     if(d.value) return color(d.value);
                     else return 'grey';
@@ -107,7 +108,7 @@ let createMap = function( svg, file ) {//minlat, maxlat, minlon, maxlon,  ) {
         territory.exit().remove();
         territory = territory.enter()
             .append( 'path' )
-                .style( 'stroke', 'grey' )
+                .style( 'stroke', 'white' )
             .merge( territory )
                 .attr( 'd', path );
 
