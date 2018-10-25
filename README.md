@@ -2,7 +2,6 @@
 Experimenting the preprocessing of GIS data using D3 and other tools
 Also developing a simple d3 map component.
 
-
 ![Example processed map](nv_screen.svg)
 
 ## Examples
@@ -10,11 +9,8 @@ Also developing a simple d3 map component.
    - example [makefile](https://gist.github.com/johan/db11e7bd04f030031dae209fa1a6c3e4) by johan
  - Contour map [tutorial](https://www.axismaps.com/blog/2018/04/contours-in-browser/)
  - Another [topographic map](https://bl.ocks.org/hugolpz/6279966) scripted by Lopez Hugo
-- [StatePlanes](https://github.com/veltman/d3-stateplane) by Noah Veltman
-- Here is an Bostock [example](https://bl.ocks.org/mbostock/83c0be21dba7602ee14982b020b12f51) which transforms contour coordinates back into spherical
-
-## Resources
- - [MapShaper](https://mapshaper.org/)
+ - [StatePlanes](https://github.com/veltman/d3-stateplane) by Noah Veltman
+ - Here is an Bostock [example](https://bl.ocks.org/mbostock/83c0be21dba7602ee14982b020b12f51) which transforms contour coordinates back into spherical
 
 ## Geospatial Data
  - Obtained nevada data from the [US Census Bureau](https://www2.census.gov/geo/tiger/GENZ2017/shp/)
@@ -22,6 +18,7 @@ Also developing a simple d3 map component.
  - Space shuttle radar height rasters [SRTM](https://dds.cr.usgs.gov/srtm/)
 
 ## Tools
+ - [MapShaper](https://mapshaper.org/)
  - [TopoJSON](https://github.com/topojson/topojson)
  - [Open Source Geospatial Foundation](https://www.osgeo.org/)
  - Shapefile [Specification](http://www.esri.com/library/whitepapers/pdfs/shapefile.pdf)
