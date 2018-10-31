@@ -28,7 +28,9 @@ let assert = require('assert');
         // contour.create( tile, 0, 500, 4000 ); // TODO add an output directory argument
 
         let grid = await srtm.loadGrid( './srtm3', 35, 42, -120, -114, 1201 );
-        let tile = srtm.resample( grid, 35, -120, 18, 1200, 1400 );
+        // let tile = srtm.resample( grid, 35, -120, 18, 1200, 1400 );
+        // let tile = srtm.resample( grid, 35, -120, 36, 600, 700 );
+        let tile = srtm.resample( grid, 35, -120, 72, 300, 350 );
         console.log( 'min:'+tile.lowest+' max:'+tile.highest);
         contour.create( tile, 0, 500, 4000 );
         // TODO add an output directory argument

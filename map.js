@@ -42,11 +42,13 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
    //svg.attr('viewbox', [0,0,width, height]);
 
    // Projection for central Nevada, EPSG:32108
-   let projection = d3.geoTransverseMercator() // d3.geoIdentity();
-       .rotate([116 + 40 / 60, -34 - 45 / 60])
-       .scale(width)
+   // let clip = d3.geoClipRectangle(0, 0, 500, 500);
+   let projection = d3.geoTransverseMercator()
+    .rotate([117, -39]) // .rotate([116 + 40 / 60, -34 - 45 / 60])
+       .scale(width*10)
+       .precision(0.0)// I'm pretty sure this just smoothes out existing segments on the screen- id doesn't simplyfy geometries!
+    //    .postclip( clip )
        //.center([-117.0, 39.0]) // I really have no idea how else this method could be used but apparently this is wrong? It actually crashes the tab!
-       //.postClip()
        ;
 
    let path = d3.geoPath()
@@ -194,6 +196,7 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
         if(!dragStart) { dragStart = dragEnd; return; }
 
         // get the distance dragged on the screen, scaled by the zoom
+        console.log(scale+ ' vs ' +projection.scale());
         let Dx = lambda( dragEnd[0]-dragStart[0] ) / scale;
         let Dy = phi( dragEnd[1]-dragStart[1] ) / scale;
 
