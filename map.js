@@ -133,7 +133,7 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
             .merge( markers )
                 .attr( 'class', function(d){return d.class;} )
                 .each( function(d) {
-                    let p = [d.x, d.y];//projection([d.x, d.y]);
+                    let p = projection([d.x, d.y]);
                     d3.select(this)
                     .attr('x', p[0])
                     .attr('y', p[1]);
