@@ -25,6 +25,6 @@ Also developing a simple d3 map component.
  - [GDAL](https://www.gdal.org/)
  - [ESRI](https://www.esri.com/en-us/arcgis/products/index)
  - [USGS Software](https://lta.cr.usgs.gov/get_data)
- 
+ - [TopoJSON](https://github.com/topojson/topojson) can simplify GeoJSON
  ## Misc
   - Some [bash](http://tldp.org/HOWTO/Bash-Prog-Intro-HOWTO.html#toc7) [guides](https://tiswww.case.edu/php/chet/bash/bashref.html)

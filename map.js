@@ -11,20 +11,34 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
     let marks = []; // array or markers to be displayed
     let moved = function(screen){}; // callback for mouse movements
     let clicked = function(mark, index, selection){}; // callback for mouse clicks
+    
     let scale = 1.0; // current projection scale
     let dragStart = null; // flagg for if the mouse is currently dragging
+    let zoom = d3.zoom()
+        //.scaleExtent([1,5])
+        //.translateExtent([,]);
+        .on('zoom', zoomed);
+    svg.call( zoom );
+    // let container = svg.append('g')
+    //     .classed('map')
+    //     .attr('transform', 'translate(0,0)scale(1,1)');
+    // let bbox = container.node().getBBox();
+    // console.log( bbox );
     
     // prepare selection for various parts of the svg
-    let elevation = svg.append( 'g' )
+    let group = svg.append('g')
+        .classed('map', true)
+        .attr('transform', 'translate(0,0)scale(1)')
+    let elevation = group.append( 'g' )
          .attr( 'class', 'elevation' )
          .selectAll( 'path' );
-    let territory = svg.append( 'g' )
+    let territory = group.append( 'g' )
         .attr( 'class', 'territory' )
         .selectAll( 'path' );
-    let markers = svg.append( 'g' )
+    let markers = group.append( 'g' )
         .attr( 'class', 'markers' )
         .selectAll( 'use' );
-    let graticule = svg.append( 'g' )
+    let graticule = group.append( 'g' )
         .attr('class', 'graticule')
         .append( 'path' )
         .style('stroke', '#000')
@@ -37,16 +51,17 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
         '#AC9A7C','#BAAE9A','#CAC3B8','#E0DED8','#F5F4F2'])// brown to white
         .domain([-100, 4400]);
 
-   // TODO once we project into screen coordinates we can move the SVG's view box around
-   // svg.attr('viewbox', [-120,42,6,7]);
-   //svg.attr('viewbox', [0,0,width, height]);
+    // TODO once we project into screen coordinates we can move the SVG's view box around
+    // svg.attr('viewbox', [-120,42,6,7]);
+    //svg.attr('viewbox', [0,0,width, height]);
 
-   // Projection for central Nevada, EPSG:32108
-   // let clip = d3.geoClipRectangle(0, 0, 500, 500);
-   let projection = d3.geoTransverseMercator()
-    .rotate([117, -39]) // .rotate([116 + 40 / 60, -34 - 45 / 60])
-       .scale(width*10)
-       .precision(0.0)// I'm pretty sure this just smoothes out existing segments on the screen- id doesn't simplyfy geometries!
+    // Projection for central Nevada, EPSG:32108
+    // let clip = d3.geoClipRectangle(0, 0, 500, 500);
+    let projection = //d3.geoIdentity()
+        d3.geoTransverseMercator()
+        .rotate([117, -39]) // .rotate([116 + 40 / 60, -34 - 45 / 60])
+        .scale(width*10)
+        .precision(0.0)// I'm pretty sure this just smoothes out existing segments on the screen- id doesn't simplyfy geometries!
     //    .postclip( clip )
        //.center([-117.0, 39.0]) // I really have no idea how else this method could be used but apparently this is wrong? It actually crashes the tab!
        ;
@@ -55,14 +70,14 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
        .projection( projection );
     
     // set up the mouse interactivity
-    svg.call( d3.drag()
-        .on( 'start', started )
-        .on( 'drag', dragged )
-        .on( 'end', ended )
-    );
-    svg.call( d3.zoom()
-        .on('zoom', wheel )
-    );
+    // svg.call( d3.drag()
+    //     .on( 'start', started )
+    //     .on( 'drag', dragged )
+    //     .on( 'end', ended )
+    // );
+    // svg.call( d3.zoom()
+    //     .on('zoom', wheel )
+    // );
     //svg.on( 'mousemove', moved ); // TODO add mouse move event
 
     /** The default function invokes a render of the entire map */
@@ -118,7 +133,7 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
             .merge( markers )
                 .attr( 'class', function(d){return d.class;} )
                 .each( function(d) {
-                    let p = projection([d.x, d.y]);
+                    let p = [d.x, d.y];//projection([d.x, d.y]);
                     d3.select(this)
                     .attr('x', p[0])
                     .attr('y', p[1]);
@@ -162,63 +177,19 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
     //     move = callback;
     //     return map;
     // }
-    // function move() {
-    //     if(moved) {
-    //         let screen = D3.mouse(this);
-    //         moved( screen );
-    //     }
-    // }
-
     map.click = function( callback ) {
         clicked = callback;
         return map;
     }
-    // function click( star, index, selection ) {
-    //     if( clicked )
-    //             clicked( star, index, selection );
-    // }
 
-    // scales for screen coordinates to rotation
-    var lambda = d3.scaleLinear()
-        .domain([-width, width])
-        .range([-180, 180]);
-    var phi = d3.scaleLinear()
-        .domain([-height, height])
-        .range([90, -90]);
-    
-    // these drag callbacks update a rotation applied to the projection
-    function started() { dragStart = d3.mouse(this); }
-    function dragged() {
-        // get coordinates of mouse event in svg container
-        let dragEnd = d3.mouse(this);
 
-        // abort if this is the first point of the drag
-        if(!dragStart) { dragStart = dragEnd; return; }
-
-        // get the distance dragged on the screen, scaled by the zoom
-        console.log(scale+ ' vs ' +projection.scale());
-        let Dx = lambda( dragEnd[0]-dragStart[0] ) / scale;
-        let Dy = phi( dragEnd[1]-dragStart[1] ) / scale;
-
-        // add it to the current transformation
-        let last = projection.rotate();
-        last = [last[0] + Dx, last[1] + Dy];
-
-        // update the projection
-        projection.rotate( last );
-        map();
-
-        // update the drag point
-        dragStart = dragEnd;
-    }
-    function ended() { dragStart = null; }
-
-    // the mouse wheel adjusts the field of view
-    function wheel() {
-        scale = d3.event.transform.k;
-        projection.scale( scale * width );
-        //projection.clipAngle( scale * 179.0 );
-        map();
+    function zoomed() {
+        // let tx = d3.event.transform.x;
+        // let ty = d3.event.transform.y;
+        // let sx = d3.event.transform.k;
+        // svg.attr('transform', 'translate('+tx+','+ty+')scale('+sx+')');
+        group.attr('transform', d3.event.transform.toString() );
+        // console.log( d3.event.transform.toString() );
     }
 
     map.screen2sphere = function( screen ) {
@@ -230,4 +201,47 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
     }
 
     return map;
+
+    // // scales for screen coordinates to rotation
+    // var lambda = d3.scaleLinear()
+    //     .domain([-width, width])
+    //     .range([-180, 180]);
+    // var phi = d3.scaleLinear()
+    //     .domain([-height, height])
+    //     .range([90, -90]);
+    
+    // // these drag callbacks update a rotation applied to the projection
+    // function started() { dragStart = d3.mouse(this); }
+    // function dragged() {
+    //     // get coordinates of mouse event in svg container
+    //     let dragEnd = d3.mouse(this);
+
+    //     // abort if this is the first point of the drag
+    //     if(!dragStart) { dragStart = dragEnd; return; }
+
+    //     // get the distance dragged on the screen, scaled by the zoom
+    //     console.log(scale+ ' vs ' +projection.scale());
+    //     let Dx = lambda( dragEnd[0]-dragStart[0] ) / scale;
+    //     let Dy = phi( dragEnd[1]-dragStart[1] ) / scale;
+
+    //     // add it to the current transformation
+    //     let last = projection.rotate();
+    //     last = [last[0] + Dx, last[1] + Dy];
+
+    //     // update the projection
+    //     projection.rotate( last );
+    //     map();
+
+    //     // update the drag point
+    //     dragStart = dragEnd;
+    // }
+    // function ended() { dragStart = null; }
+
+    // // the mouse wheel adjusts the field of view
+    // function wheel() {
+    //     scale = d3.event.transform.k;
+    //     projection.scale( scale * width );
+    //     //projection.clipAngle( scale * 179.0 );
+    //     map();
+    // }
 }
