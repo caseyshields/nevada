@@ -4,33 +4,24 @@
  * @param {string} svg - A D3 selection holding the svg where the map will be rendered
 */
 let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
-    var width = +svg.attr("width");
-    var height = +svg.attr("height");
     let contours = []; // Array of GeoJSON contour polygons
     let tracts = {features:[]}; // GeoJSON territorial lines to be drawn
     let marks = []; // array or markers to be displayed
-    let moved = function(screen){}; // callback for mouse movements
-    let clicked = function(mark, index, selection){}; // callback for mouse clicks
     
-    let scale = 1.0; // current projection scale
-    let dragStart = null; // flagg for if the mouse is currently dragging
-    let zoom = d3.zoom()
-        //.scaleExtent([1,5])
-        //.translateExtent([,]);
-        .on('zoom', zoomed);
-    svg.call( zoom );
-    // let container = svg.append('g')
-    //     .classed('map')
-    //     .attr('transform', 'translate(0,0)scale(1,1)');
-    // let bbox = container.node().getBBox();
-    // console.log( bbox );
-    
+    let args = {
+        worldBounds: [[-120,42],[-114,35]], // defaults to Nevada
+        worldScale: 6 * 60*60, // about an arcsecond to a screen pixel is what I'm aiming for...
+        screenBounds: [[0,0],[600,700]],
+
+    };
+
     // prepare selection for various parts of the svg
     let group = svg.append('g')
         .classed('map', true)
         .attr('transform', 'translate(0,0)scale(1)')
     let elevation = group.append( 'g' )
          .attr( 'class', 'elevation' )
+         .attr('pointer-events', 'all')
          .selectAll( 'path' );
     let territory = group.append( 'g' )
         .attr( 'class', 'territory' )
@@ -56,19 +47,51 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
     //svg.attr('viewbox', [0,0,width, height]);
 
     // Projection for central Nevada, EPSG:32108
-    // let clip = d3.geoClipRectangle(0, 0, 500, 500);
+    // let clip = d3.geoClipRectangle(12.66, -387.03, 988.82, 871.01);
     let projection = //d3.geoIdentity()
+        // d3.geoMercator()
+        // .scale( 6*3600 )
+        // .center( [-117,39] )
+        ////.clipExtent( [[0,0], [600,700]] ) // screen coordinates of the projection output
+
         d3.geoTransverseMercator()
-        .rotate([117, -39]) // .rotate([116 + 40 / 60, -34 - 45 / 60])
-        .scale(width*10)
-        .precision(0.0)// I'm pretty sure this just smoothes out existing segments on the screen- id doesn't simplyfy geometries!
-    //    .postclip( clip )
+        .rotate([116 + 40 / 60, -38 - 45 / 60])
+        .scale( args.worldScale )
+        // .precision(0.0)// I'm pretty sure this just smoothes out existing segments on the screen- id doesn't simplyfy geometries!
+        // .postclip( clip )
        //.center([-117.0, 39.0]) // I really have no idea how else this method could be used but apparently this is wrong? It actually crashes the tab!
        ;
 
    let path = d3.geoPath()
        .projection( projection );
-    
+
+    let bb = [];
+    bb.push( projection([-120, 42]) );
+    bb.push( projection([-114, 35]) );
+console.log( bb );
+    let zoom = d3.zoom()
+        .scaleExtent([0.2,5.0])
+        .translateExtent(bb)
+        .on('zoom', zoomed);
+    svg.call( zoom );
+    // let container = svg.append('g')
+    //     .classed('map')
+    //     .attr('transform', 'translate(0,0)scale(1,1)');
+    // let bbox = container.node().getBBox();
+    // console.log( bbox );
+       
+    let moved = function(){}; // callback for mouse movements
+    let clicked = function(mark, index, selection){
+        let screen = d3.mouse( this )
+        let transform = d3.zoomTransform( group );
+        let sphere = projection.invert(screen);
+        // Note: 'this' refers to the top level map node
+        console.log( mark );
+        console.log( transform );
+        console.log( screen );
+        console.log( sphere );
+    }; // callback for mouse clicks
+
     // set up the mouse interactivity
     // svg.call( d3.drag()
     //     .on( 'start', started )
@@ -173,14 +196,18 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
         return map;
     };
 
-    // map.move = function( callback ) {
-    //     move = callback;
-    //     return map;
-    // }
     map.click = function( callback ) {
         clicked = callback;
+        group.on('click', clicked);
         return map;
     }
+    map.move = function( callback ) {
+        moved = callback;
+        group.on('mousemove', moved);
+        return map;
+    }
+    map.move(moved);
+    map.click(clicked);
 
 
     function zoomed() {
@@ -189,7 +216,7 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
         // let sx = d3.event.transform.k;
         // svg.attr('transform', 'translate('+tx+','+ty+')scale('+sx+')');
         group.attr('transform', d3.event.transform.toString() );
-        // console.log( d3.event.transform.toString() );
+        console.log( d3.event.transform.toString() );
     }
 
     map.screen2sphere = function( screen ) {
@@ -201,6 +228,12 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
     }
 
     return map;
+
+    // var width = +svg.attr("width");
+    // var height = +svg.attr("height");
+    // let scale = 1.0; // current projection scale
+    // let dragStart = null; // flagg for if the mouse is currently dragging
+    
 
     // // scales for screen coordinates to rotation
     // var lambda = d3.scaleLinear()

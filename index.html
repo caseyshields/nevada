@@ -7,13 +7,12 @@
     <script src="map.js" charset="utf-8"></script>
     <title>D3 Map Component</title>
     <style>
-        path {
-            /* color: black; */
-            /* stroke: grey; */
-            fill: none;
-        }
-        svg {
+        path { fill: none; }
+        svg { 
             background-color:none;
+            /* border-width: 10px;
+            border-color: blue; */
+            outline: medium solid red;
         }
         use.stitches {
             stroke: #F00;
@@ -28,10 +27,9 @@
     </style>
 </head>
 <body>
-    <h1>Nevada 2017 Tracts</h1>
-    <svg id="svg-map" width="1201" height="1401"
-            viewBox="-500 -500 2000 2000"
-            >
+    <!-- <h1>Nevada 2017 Tracts</h1> -->
+    <svg id="svg-map" width="600" height="700">
+            <!-- viewBox="-500 -500 2000 2000" -->
         <defs>
             <g id="source">
                 <title> Source </title>
@@ -63,10 +61,24 @@
         ];
 
         let map = createMap(svg)
-            .marks( pins )
-            .click( function(mark, index, selection){
-                console.log(mark);}
-            );
+            .marks( pins );
+            // .click( function(mark, index, selection) {
+            //     let screen = d3.mouse( this )
+            //     let transform = d3.zoomTransform( this );
+            //     let sphere = projection.invert(screen);
+            //     // Note: 'this' refers to the top level map node
+
+            //     console.log( transform );
+            //     console.log( screen );
+            //     console.log( sphere );
+
+            // } ).move( function() {
+            //     //console.log( this );
+            //     let Ps = d3.mouse( this );
+            //     // console.log( d3.event );//.transform.toString() );
+            //     // let T = d3.event.transform;
+            //     // console.log(T);
+            // });
             
         map();
 
