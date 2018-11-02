@@ -3,18 +3,18 @@
  * Factory which returns a D3 map component
  * @param {string} svg - A D3 selection holding the svg where the map will be rendered
 */
-let createMap = function( svg, arguments ) {
+let createMap = function( svg, params ) {
     let contours = []; // Array of GeoJSON contour polygons
     let tracts = {features:[]}; // GeoJSON territorial lines to be drawn
     let marks = []; // array or markers to be displayed
     
     let args = {
-        worldBounds: [[-120,42],[-114,35]], // defaults to Nevada in spherical coordinates
+        sphereBounds: [[-120,42],[-114,35]], // defaults to Nevada in spherical coordinates
         worldScale: 6 * 60*60, // about an arcsecond to a screen pixel is what I'm aiming for...
         screenBounds: [[0,0],[600,700]],
         markerScale: 1.0,
     };
-    args = Object.assign( args, arguments );
+    args = Object.assign( args, params );
 
     // prepare selection for various parts of the svg
     let group = svg.append('g')
@@ -52,25 +52,22 @@ let createMap = function( svg, arguments ) {
         .rotate([116 + 40 / 60, -38 - 45 / 60])
         .scale( args.worldScale )
         
-        // .precision(0.0)// I'm pretty sure this just smoothes out existing segments on the screen- id doesn't simplyfy geometries!
         //.clipExtent( [[0,0], [600,700]] ) // screen coordinates of the projection output
        ;
 
    let path = d3.geoPath()
        .projection( projection );
 
+    let worldBounds = args.sphereBounds.map(projection);
+
     let zoom = d3.zoom()
         .scaleExtent([0.2,5.0])
-        .translateExtent( args.worldBounds )
+        .translateExtent( worldBounds )
         .on('zoom', zoomed);
     svg.call( zoom );
-    // let container = svg.append('g')
-    //     .classed('map')
-    //     .attr('transform', 'translate(0,0)scale(1,1)');
-    // let bbox = container.node().getBBox();
-    // console.log( bbox );
-       
+
     let moved = function(){}; // callback for mouse movements
+
     let clicked = function(mark, index, selection){
         let screen = d3.mouse( this )
         let transform = d3.zoomTransform( group );
@@ -81,17 +78,6 @@ let createMap = function( svg, arguments ) {
         console.log( screen );
         console.log( sphere );
     }; // callback for mouse clicks
-
-    // set up the mouse interactivity
-    // svg.call( d3.drag()
-    //     .on( 'start', started )
-    //     .on( 'drag', dragged )
-    //     .on( 'end', ended )
-    // );
-    // svg.call( d3.zoom()
-    //     .on('zoom', wheel )
-    // );
-    //svg.on( 'mousemove', moved ); // TODO add mouse move event
 
     /** The default function invokes a render of the entire map */
     let map = function() {
@@ -142,6 +128,7 @@ let createMap = function( svg, arguments ) {
         markers = markers.enter()
             .append( 'use' )
                 .attr( 'xlink:xlink:href', function(d) {return '#'+d.glyph;} )
+                // hack^ : the xlink is pared off in the attribute name conversion, but not two...
                 .on( 'click', clicked )
             .merge( markers )
                 .attr( 'class', function(d){return d.class;} )
@@ -218,52 +205,4 @@ let createMap = function( svg, arguments ) {
 
     return map;
 
-    // var width = +svg.attr("width");
-    // var height = +svg.attr("height");
-    // let scale = 1.0; // current projection scale
-    // let dragStart = null; // flagg for if the mouse is currently dragging
-    
-
-    // // scales for screen coordinates to rotation
-    // var lambda = d3.scaleLinear()
-    //     .domain([-width, width])
-    //     .range([-180, 180]);
-    // var phi = d3.scaleLinear()
-    //     .domain([-height, height])
-    //     .range([90, -90]);
-    
-    // // these drag callbacks update a rotation applied to the projection
-    // function started() { dragStart = d3.mouse(this); }
-    // function dragged() {
-    //     // get coordinates of mouse event in svg container
-    //     let dragEnd = d3.mouse(this);
-
-    //     // abort if this is the first point of the drag
-    //     if(!dragStart) { dragStart = dragEnd; return; }
-
-    //     // get the distance dragged on the screen, scaled by the zoom
-    //     console.log(scale+ ' vs ' +projection.scale());
-    //     let Dx = lambda( dragEnd[0]-dragStart[0] ) / scale;
-    //     let Dy = phi( dragEnd[1]-dragStart[1] ) / scale;
-
-    //     // add it to the current transformation
-    //     let last = projection.rotate();
-    //     last = [last[0] + Dx, last[1] + Dy];
-
-    //     // update the projection
-    //     projection.rotate( last );
-    //     map();
-
-    //     // update the drag point
-    //     dragStart = dragEnd;
-    // }
-    // function ended() { dragStart = null; }
-
-    // // the mouse wheel adjusts the field of view
-    // function wheel() {
-    //     scale = d3.event.transform.k;
-    //     projection.scale( scale * width );
-    //     //projection.clipAngle( scale * 179.0 );
-    //     map();
-    // }
 }
