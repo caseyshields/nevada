@@ -19,23 +19,27 @@ let createMap = function( svg, params ) {
 
     // prepare selection for various parts of the svg
     let group = svg.append('g')
-        .classed('map', true)
-        .attr('transform', 'translate(0,0)scale(1)')
-    let elevation = group.append( 'g' )
+        .classed('map', true);
+    let back = group.append('g')
+        .classed('background', true)
+        .attr('transform', 'translate(0,0)scale(1)');
+    let elevation = back.append( 'g' )
          .attr( 'class', 'elevation' )
          .attr('pointer-events', 'all')
          .selectAll( 'path' );
-    let territory = group.append( 'g' )
+    let territory = back.append( 'g' )
         .attr( 'class', 'territory' )
         .selectAll( 'path' );
-    let markers = group.append( 'g' )
-        .attr( 'class', 'markers' )
-        .selectAll( 'use' );
-    let graticule = group.append( 'g' )
+    let graticule = back.append( 'g' )
         .attr('class', 'graticule')
         .append( 'path' )
         .style('stroke', '#000')
         .datum( d3.geoGraticule().step([10, 10]) );
+    let fore = group.append('g')
+        .classed('foreground', true);
+    let markers = fore.append( 'g' )
+        .attr( 'class', 'markers' )
+        .selectAll( 'use' );
 
     // default color scale for elevation, cribbed from 'https://en.wikipedia.org/wiki/Wikipedia:WikiProject_Maps/Conventions', though there are no given corresponding heights
     let color = d3.scaleQuantize()
@@ -65,42 +69,13 @@ let createMap = function( svg, params ) {
     // D3.path can generate various viewport geometries from raw geometries by applying a projection
     let path = d3.geoPath()
        .projection( projection );
-    
-    // args.sphereBounds.reduce(
-    //     function(acc, cur) {
-    //         acc.forEach(
-    //             (v,i)=>{acc[i]+=cur[i];}
-    //         );
-    //         return acc;
-    //     }, [0,0] ); // js hipster.
-
-    // D3.zoom collects various mouse gestures into a transform which can be applied to different objects in different ways
-    let worldBounds = args.sphereBounds.map(projection);
-    let zoom = d3.zoom()
-        .scaleExtent( args.zoomBounds )
-        .translateExtent( worldBounds )
-        .on('zoom', zoomed);
-    svg.call( zoom );
-
-    let moved = function(){}; // callback for mouse movements
-
-    let clicked = function(mark, index, selection){
-        let screen = d3.mouse( this )
-        let transform = d3.zoomTransform( group );
-        let sphere = projection.invert(screen);
-        // Note: 'this' refers to the top level map node
-        console.log( mark );
-        console.log( transform );
-        console.log( screen );
-        console.log( sphere );
-    }; // callback for mouse clicks
 
     /** The default function invokes a render of the entire map */
     let map = function() {
         graticule.attr('d', path);
         map.drawContours();
         map.drawBounds();
-        map.drawMarks();
+        //map.drawMarks();
     };
 
     /** draw the graticule, elevations, and territories */
@@ -138,7 +113,7 @@ let createMap = function( svg, params ) {
     };
 
     /** Updates the marks position in the SVG */
-    map.drawMarks = function() {
+    map.drawMarks = function( transform ) {
         markers = markers.data( marks );
         markers.exit().remove();
         markers = markers.enter()
@@ -149,12 +124,64 @@ let createMap = function( svg, params ) {
             .merge( markers )
                 .attr( 'class', function(d){return d.class;} )
                 .each( function(d) {
-                    let p = projection([d.x, d.y]);
+                    let view = projection([d.x, d.y]);
+                    let screen = [
+                        view[0]*transform.k + transform.x,
+                        view[1]*transform.k + transform.y
+                    ];
                     d3.select(this)
-                    .attr('x', p[0])
-                    .attr('y', p[1]);
+                    .attr('x', screen[0])
+                    .attr('y', screen[1]);
                 });
     };
+
+    // D3.zoom collects various mouse gestures into a transform which is cached with affected DOM nodes.
+    // this transfor can then be appllied a number of ways
+    let worldBounds = args.sphereBounds.map(projection);
+    let zoom = d3.zoom()
+        .scaleExtent( args.zoomBounds )
+        .translateExtent( worldBounds )
+        .on('zoom', function() {
+            // console.log( d3.event.transform.toString() );
+    
+            // Applies the current zoom transform to the ground geometries as a CSS transform
+            back.attr('transform', d3.event.transform.toString() );
+            
+            //obtain a nodes zoom transform d3.zoomTransform( this )
+
+            // TODO semantically zoom map markers by altering thier attributes.
+            map.drawMarks( d3.event.transform );
+        } );
+    svg.call( zoom );
+
+    // public mutators for mouse event handlers...
+    map.click = function( callback ) {
+        clicked = callback;
+        group.on('click', clicked);
+        return map;
+    }
+    map.move = function( callback ) {
+        moved = callback;
+        group.on('mousemove', moved);
+        return map;
+    }
+
+    // setting mouse callbacks
+    let moved = function() {};
+    map.move( moved );
+
+    let clicked = function (mark, index, selection) {
+        let screen = d3.mouse( this )
+        let transform = d3.zoomTransform( group );
+        let sphere = projection.invert(screen);
+        // Note: 'this' refers to the top level map node
+        console.log( mark );
+        console.log( transform );
+        console.log( screen );
+        console.log( sphere );
+    };
+    map.click( clicked );
+    // todo remove these debugging behaviors after I figure out the control scheme
 
     /** Changes the elevation color scale. */
     map.setColorScale = function( scale ) {
@@ -166,7 +193,7 @@ let createMap = function( svg, params ) {
     /** sets the array holding the map's marker data */
     map.marks = function( array ) {
         marks = array;
-        map.drawMarks();
+        //map.drawMarks();
         return map;
     };
 
@@ -189,36 +216,18 @@ let createMap = function( svg, params ) {
         return map;
     };
 
-    map.click = function( callback ) {
-        clicked = callback;
-        group.on('click', clicked);
-        return map;
-    }
-    map.move = function( callback ) {
-        moved = callback;
-        group.on('mousemove', moved);
-        return map;
-    }
-    map.move(moved);
-    map.click(clicked);
-
-    /** Applies the current zoom transform to the ground geometries as a CSS
-     * transform, and semantically zooms map markers by altering thier attributes.*/
-    function zoomed() {
-        // console.log( d3.event.transform.toString() );
-        group.attr('transform', d3.event.transform.toString() );
-        
-        //TODO alter markers on a separate layer
-    }
-
+    /** Convert from view port coordinates into spherical coordinates */
     map.screen2sphere = function( screen ) {
         return projection.invert( screen );
     }
 
+    /** Convert from spherical coordinates into viewport coordinates
+     * @param {number[]} sphere - An array holding the longitude and latitude in that order
+     * @return An array holding the planar viewport coordinates.
+     */
     map.sphere2screen = function( sphere ) {
         return projection( sphere );
     }
 
     return map;
-
 }
