@@ -3,17 +3,18 @@
  * Factory which returns a D3 map component
  * @param {string} svg - A D3 selection holding the svg where the map will be rendered
 */
-let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
+let createMap = function( svg, arguments ) {
     let contours = []; // Array of GeoJSON contour polygons
     let tracts = {features:[]}; // GeoJSON territorial lines to be drawn
     let marks = []; // array or markers to be displayed
     
     let args = {
-        worldBounds: [[-120,42],[-114,35]], // defaults to Nevada
+        worldBounds: [[-120,42],[-114,35]], // defaults to Nevada in spherical coordinates
         worldScale: 6 * 60*60, // about an arcsecond to a screen pixel is what I'm aiming for...
         screenBounds: [[0,0],[600,700]],
-
+        markerScale: 1.0,
     };
+    args = Object.assign( args, arguments );
 
     // prepare selection for various parts of the svg
     let group = svg.append('g')
@@ -42,37 +43,25 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
         '#AC9A7C','#BAAE9A','#CAC3B8','#E0DED8','#F5F4F2'])// brown to white
         .domain([-100, 4400]);
 
-    // TODO once we project into screen coordinates we can move the SVG's view box around
-    // svg.attr('viewbox', [-120,42,6,7]);
-    // TODO right now I am transforming a parent group rather than moving the viewbox... would controlling the view box be better?
-    // it would preclude the component from being combined with other visualizations...
-
-    // Projection for central Nevada, EPSG:32108
-    // let clip = d3.geoClipRectangle(12.66, -387.03, 988.82, 871.01);
-    let projection = //d3.geoIdentity()
+    let projection =
         // d3.geoMercator()
         // .scale( 6*3600 )
         // .center( [-117,39] )
-        ////.clipExtent( [[0,0], [600,700]] ) // screen coordinates of the projection output
 
         d3.geoTransverseMercator()
         .rotate([116 + 40 / 60, -38 - 45 / 60])
         .scale( args.worldScale )
+        
         // .precision(0.0)// I'm pretty sure this just smoothes out existing segments on the screen- id doesn't simplyfy geometries!
-        // .postclip( clip )
-       //.center([-117.0, 39.0]) // I really have no idea how else this method could be used but apparently this is wrong? It actually crashes the tab!
+        //.clipExtent( [[0,0], [600,700]] ) // screen coordinates of the projection output
        ;
 
    let path = d3.geoPath()
        .projection( projection );
 
-    let bb = [];
-    bb.push( projection([-120, 42]) );
-    bb.push( projection([-114, 35]) );
-console.log( bb );
     let zoom = d3.zoom()
         .scaleExtent([0.2,5.0])
-        .translateExtent(bb)
+        .translateExtent( args.worldBounds )
         .on('zoom', zoomed);
     svg.call( zoom );
     // let container = svg.append('g')
@@ -210,14 +199,13 @@ console.log( bb );
     map.move(moved);
     map.click(clicked);
 
-
+    /** Applies the current zoom transform to the ground geometries as a CSS
+     * transform, and semantically zooms map markers by altering thier attributes.*/
     function zoomed() {
-        // let tx = d3.event.transform.x;
-        // let ty = d3.event.transform.y;
-        // let sx = d3.event.transform.k;
-        // svg.attr('transform', 'translate('+tx+','+ty+')scale('+sx+')');
+        // console.log( d3.event.transform.toString() );
         group.attr('transform', d3.event.transform.toString() );
-        console.log( d3.event.transform.toString() );
+        
+        //TODO alter markers on a separate layer
     }
 
     map.screen2sphere = function( screen ) {
