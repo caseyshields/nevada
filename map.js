@@ -9,10 +9,11 @@ let createMap = function( svg, params ) {
     let marks = []; // array or markers to be displayed
     
     let args = {
-        sphereBounds: [[-120,42],[-114,35]], // defaults to Nevada in spherical coordinates
+        sphereBounds: [[-120,42],[-114,35]], // top left and bottom right bounding coordinates, defaults to Nevada
         worldScale: 6 * 60*60, // about an arcsecond to a screen pixel is what I'm aiming for...
         screenBounds: [[0,0],[600,700]],
         markerScale: 1.0,
+        zoomBounds: [0.2, 5.0],
     };
     args = Object.assign( args, params );
 
@@ -43,25 +44,40 @@ let createMap = function( svg, params ) {
         '#AC9A7C','#BAAE9A','#CAC3B8','#E0DED8','#F5F4F2'])// brown to white
         .domain([-100, 4400]);
 
+    // create a projection which maps spherical coordinates onto planar viewport coordinates
+    let lt = args.sphereBounds[0];
+    let br = args.sphereBounds[1];
+    let toCenter = [ -(lt[0]+br[0])/2.0, -(lt[1]+br[1])/2.0 ];
     let projection =
-        // d3.geoMercator()
-        // .scale( 6*3600 )
-        // .center( [-117,39] )
-
         d3.geoTransverseMercator()
-        .rotate([116 + 40 / 60, -38 - 45 / 60])
+        .rotate( toCenter ) // previously used [116 + 40 / 60, -38 - 45 / 60]
         .scale( args.worldScale )
+
+        // lines are a bit straighter with the plain mercator, however there is more distortion...
+        // d3.geoMercator()
+        // .scale( args.worldScale )
+        // .center( -toCenter )
         
+        // I should eventually clip, but I'm not sure what stage to do it at...
         //.clipExtent( [[0,0], [600,700]] ) // screen coordinates of the projection output
        ;
 
-   let path = d3.geoPath()
+    // D3.path can generate various viewport geometries from raw geometries by applying a projection
+    let path = d3.geoPath()
        .projection( projection );
+    
+    // args.sphereBounds.reduce(
+    //     function(acc, cur) {
+    //         acc.forEach(
+    //             (v,i)=>{acc[i]+=cur[i];}
+    //         );
+    //         return acc;
+    //     }, [0,0] ); // js hipster.
 
+    // D3.zoom collects various mouse gestures into a transform which can be applied to different objects in different ways
     let worldBounds = args.sphereBounds.map(projection);
-
     let zoom = d3.zoom()
-        .scaleExtent([0.2,5.0])
+        .scaleExtent( args.zoomBounds )
         .translateExtent( worldBounds )
         .on('zoom', zoomed);
     svg.call( zoom );
