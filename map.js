@@ -44,7 +44,8 @@ let createMap = function( svg ) {//minlat, maxlat, minlon, maxlon,  ) {
 
     // TODO once we project into screen coordinates we can move the SVG's view box around
     // svg.attr('viewbox', [-120,42,6,7]);
-    //svg.attr('viewbox', [0,0,width, height]);
+    // TODO right now I am transforming a parent group rather than moving the viewbox... would controlling the view box be better?
+    // it would preclude the component from being combined with other visualizations...
 
     // Projection for central Nevada, EPSG:32108
     // let clip = d3.geoClipRectangle(12.66, -387.03, 988.82, 871.01);
