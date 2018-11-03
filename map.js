@@ -112,7 +112,7 @@ let createMap = function( svg, params ) {
     };
 
     /** Updates the marks position in the SVG */
-    map.drawMarks = function( transform ) {
+    map.drawMarks = function( ) {
         markers = markers.data( marks );
         markers.exit().remove();
         markers = markers.enter()
@@ -123,11 +123,7 @@ let createMap = function( svg, params ) {
             .merge( markers )
                 .attr( 'class', function(d){return d.class;} )
                 .each( function(d) {
-                    let view = projection([d.x, d.y]);
-                    let screen = [
-                        view[0]*transform.k + transform.x,
-                        view[1]*transform.k + transform.y
-                    ];
+                    let screen = map.sphere2screen( [d.x, d.y] );
                     d3.select(this)
                     .attr('x', screen[0])
                     .attr('y', screen[1]);
@@ -149,7 +145,7 @@ let createMap = function( svg, params ) {
             //obtain a nodes zoom transform d3.zoomTransform( this )
 
             // TODO semantically zoom map markers by altering thier attributes.
-            map.drawMarks( d3.event.transform );
+            map.drawMarks( );
         } );
     group.call( zoom );
 
@@ -170,19 +166,8 @@ let createMap = function( svg, params ) {
     map.move( moved );
 
     let clicked = function (mark, index, selection) {
-        let screen = d3.mouse( group.node() );// this
-        let t = d3.zoomTransform( group.node() );
-        let view = [
-            (screen[0] - t.x) / t.k,
-            (screen[1] - t.y) / t.k
-        ];
-        let sphere = projection.invert( view );
-
-        // Note: 'this' refers to the top level map node
-        console.log( mark );
-        console.log( t );
-        console.log( screen+'->'+view+'->'+sphere );
-        //console.log( sphere );
+        let screen = d3.mouse( group.node() );
+        console.log( map.screen2sphere(screen) );
         
         // I want to stop propagation to the background if user clicks something in the foreground
         d3.event.stopPropagation();
@@ -200,7 +185,7 @@ let createMap = function( svg, params ) {
     /** sets the array holding the map's marker data */
     map.marks = function( array ) {
         marks = array;
-        //map.drawMarks();
+        map.drawMarks();
         return map;
     };
 
@@ -225,7 +210,14 @@ let createMap = function( svg, params ) {
 
     /** Convert from view port coordinates into spherical coordinates */
     map.screen2sphere = function( screen ) {
-        return projection.invert( screen );
+        //let screen = d3.mouse( group.node() );
+        let t = d3.zoomTransform( group.node() );
+        let view = [
+            (screen[0] - t.x) / t.k,
+            (screen[1] - t.y) / t.k
+        ];
+        let sphere = projection.invert( view );
+        return sphere;
     }
 
     /** Convert from spherical coordinates into viewport coordinates
@@ -233,7 +225,13 @@ let createMap = function( svg, params ) {
      * @return An array holding the planar viewport coordinates.
      */
     map.sphere2screen = function( sphere ) {
-        return projection( sphere );
+        let view = projection( sphere );
+        let t = d3.zoomTransform( group.node() );
+        let screen = [
+            view[0]*t.k + t.x,
+            view[1]*t.k + t.y
+        ];
+        return screen;
     }
 
     return map;
