@@ -10,26 +10,18 @@
         path { fill: none; }
         svg { 
             background-color:none;
-            /* border-width: 10px;
-            border-color: blue; */
-            outline: medium solid red;
+            outline: medium solid grey;
         }
         use.stitches {
-            stroke: #F00;
+            stroke: grey;
             stroke-width: 3px;
             fill: none;
         }
-        use.stitches2 {
-            stroke: #0F0;
-            stroke-width: 3px;
-            fill: none;
-        }
+        g.territory { stroke: grey; }
     </style>
 </head>
 <body>
-    <!-- <h1>Nevada 2017 Tracts</h1> -->
     <svg id="svg-map" width="600" height="700">
-            <!-- viewBox="-500 -500 2000 2000" -->
         <defs>
             <g id="source">
                 <title> Source </title>
@@ -41,25 +33,22 @@
                 <desc> A glyph representing a sink. </desc>
                 <path d="M10,0 H-10 M0,10 V-10"></path>
             </g>
+            <!-- modern browsers can use defs in external svg files; we might want to switch to this approach as we accumulate a design library of glyphs! -->
+            <!-- Example use : <use x="480" y="250" xlink:href="#sink" fill="none" stroke="#F00" stroke-width="3" /> -->
         </defs>
-        <!-- modern browsers can use defs in external svg files; we might want to switch to this approach as we accumulate a design library of glyphs! -->
-
-        <!-- Example use -->
-        <!-- <use x="480" y="250" xlink:href="#sink" fill="none" stroke="#F00" stroke-width="3" /> -->
     </svg>
     <script>
-        // select and size the SVG
         var svg = d3.select("svg#svg-map");
         var w = +svg.attr("width");
         var h = +svg.attr("height");
         var cities, sales, color, geo;
-        let pins = [
-            {x:-115, y:36, class:'stitches', glyph:'source'},
-            {x:-115, y:37, class:'stitches', glyph:'sink'},
-            {x:-116, y:36, class:'stitches2', glyph:'sink'},
-            {x:-116, y:37, class:'stitches', glyph:'source'},
-            {x:-117, y:38.5, class:'stitches2', glyph:'sink'}
-        ];
+        let pins = [];
+
+        // Mark each intersection of integer longitude and latitude
+        for (let x=-120; x<=-114; x++)
+            for (let y=35; y<=42; y++)
+                pins.push( {x:x, y:y, class:'stitches', glyph:'sink'} );
+        // lets me visually check marks and contours have the same projection
 
         let map = createMap(svg, {} )
             .marks( pins );
@@ -80,7 +69,6 @@
             //     // let T = d3.event.transform;
             //     // console.log(T);
             // });
-            
         map();
 
         // let elevationScale = d3.scaleLinear()
@@ -94,8 +82,8 @@
 
         // d3.json( 'elevation/N35W120H-100.json' )
         //     .then( map.addContour );
-        map.addContour( {type:"Sphere", value:-100} );
         // meh, just set sea level on the entire sphere rather than rendering the complex geometry resulting from data missing in the SRTM patch!
+        map.addContour( {type:"Sphere", value:-100} );
         
         // add the contour data as it loads
         d3.json( 'elevation/N35W120H500.json' )

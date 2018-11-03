@@ -22,10 +22,10 @@ let createMap = function( svg, params ) {
         .classed('map', true);
     let back = group.append('g')
         .classed('background', true)
+        .attr('pointer-events', 'all')
         .attr('transform', 'translate(0,0)scale(1)');
     let elevation = back.append( 'g' )
          .attr( 'class', 'elevation' )
-         .attr('pointer-events', 'all')
          .selectAll( 'path' );
     let territory = back.append( 'g' )
         .attr( 'class', 'territory' )
@@ -41,7 +41,7 @@ let createMap = function( svg, params ) {
         .attr( 'class', 'markers' )
         .selectAll( 'use' );
 
-    // default color scale for elevation, cribbed from 'https://en.wikipedia.org/wiki/Wikipedia:WikiProject_Maps/Conventions', though there are no given corresponding heights
+    // default color scale for elevation, cribbed from 'https://en.wikipedia.org/wiki/Wikipedia:WikiProject_Maps/Conventions', though there are no given corresponding heights...
     let color = d3.scaleQuantize()
         .range(['#ACD0A5','#94BF8B','#A8C68F','#BDCC96','#D1D7AB','#E1E4B5',//green to tan
         '#EFEBC0','#E8E1B6','#DED6A3','#D3CA9D','#CAB982','#C3A76B','#B9985A','#AA8753',//tan to brown
@@ -85,7 +85,7 @@ let createMap = function( svg, params ) {
         drawBounds();
     };
 
-    /** Updates the SVG's elevation polygons */
+    /** Updates the SVG's elevation polygons using the D3 general update pattern */
     map.drawContours = function() {
         elevation = elevation.data( contours );
         elevation.exit().remove();
@@ -107,7 +107,6 @@ let createMap = function( svg, params ) {
         territory.exit().remove();
         territory = territory.enter()
             .append( 'path' )
-                .style( 'stroke', 'grey' )
             .merge( territory )
                 .attr( 'd', path );
     };
@@ -152,7 +151,7 @@ let createMap = function( svg, params ) {
             // TODO semantically zoom map markers by altering thier attributes.
             map.drawMarks( d3.event.transform );
         } );
-    svg.call( zoom );
+    group.call( zoom );
 
     // public mutators for mouse event handlers...
     map.click = function( callback ) {
@@ -171,14 +170,22 @@ let createMap = function( svg, params ) {
     map.move( moved );
 
     let clicked = function (mark, index, selection) {
-        let screen = d3.mouse( this )
-        let transform = d3.zoomTransform( group );
-        let sphere = projection.invert(screen);
+        let screen = d3.mouse( group.node() );// this
+        let t = d3.zoomTransform( group.node() );
+        let view = [
+            (screen[0] - t.x) / t.k,
+            (screen[1] - t.y) / t.k
+        ];
+        let sphere = projection.invert( view );
+
         // Note: 'this' refers to the top level map node
         console.log( mark );
-        console.log( transform );
-        console.log( screen );
-        console.log( sphere );
+        console.log( t );
+        console.log( screen+'->'+view+'->'+sphere );
+        //console.log( sphere );
+        
+        // I want to stop propagation to the background if user clicks something in the foreground
+        d3.event.stopPropagation();
     };
     map.click( clicked );
     // todo remove these debugging behaviors after I figure out the control scheme
