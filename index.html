@@ -37,11 +37,14 @@
             <!-- Example use : <use x="480" y="250" xlink:href="#sink" fill="none" stroke="#F00" stroke-width="3" /> -->
         </defs>
     </svg>
+    <h3 class="coordinates"></h3>
+    <h3 class="info"></h3>
     <script>
-        var svg = d3.select("svg#svg-map");
-        var w = +svg.attr("width");
-        var h = +svg.attr("height");
-        var cities, sales, color, geo;
+        let svg = d3.select("svg#svg-map");
+        let coordinates = d3.select(".coordinates");
+        let info = d3.select(".info");
+        let w = +svg.attr("width");
+        let h = +svg.attr("height");
         let pins = [];
 
         // Mark each intersection of integer longitude and latitude
@@ -51,24 +54,17 @@
         // lets me visually check marks and contours have the same projection
 
         let map = createMap(svg, {} )
-            .marks( pins );
-            // .click( function(mark, index, selection) {
-            //     let screen = d3.mouse( this )
-            //     let transform = d3.zoomTransform( this );
-            //     let sphere = projection.invert(screen);
-            //     // Note: 'this' refers to the top level map node
-
-            //     console.log( transform );
-            //     console.log( screen );
-            //     console.log( sphere );
-
-            // } ).move( function() {
-            //     //console.log( this );
-            //     let Ps = d3.mouse( this );
-            //     // console.log( d3.event );//.transform.toString() );
-            //     // let T = d3.event.transform;
-            //     // console.log(T);
-            // });
+            .marks( pins )
+            .click( function (mark, index, selection) {
+                info.html( JSON.stringify(mark) );
+                // I want to stop propagation to the background if user clicks something in the foreground
+                d3.event.stopPropagation(); // should I include this by default in a handler wrapper?
+            } )
+            .move( function() {
+                let screen = d3.mouse( this );
+                let sphere = map.screen2sphere( screen );
+                coordinates.html( sphere );
+            });
         map();
 
         // let elevationScale = d3.scaleLinear()

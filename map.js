@@ -137,14 +137,10 @@ let createMap = function( svg, params ) {
         .scaleExtent( args.zoomBounds )
         .translateExtent( worldBounds )
         .on('zoom', function() {
-            // console.log( d3.event.transform.toString() );
-    
             // Applies the current zoom transform to the ground geometries as a CSS transform
             back.attr('transform', d3.event.transform.toString() );
             
-            //obtain a nodes zoom transform d3.zoomTransform( this )
-
-            // TODO semantically zoom map markers by altering thier attributes.
+            // semantically zoom map markers by altering thier attributes.
             map.drawMarks( );
         } );
     group.call( zoom );
@@ -152,28 +148,26 @@ let createMap = function( svg, params ) {
     // public mutators for mouse event handlers...
     map.click = function( callback ) {
         clicked = callback;
+        markers.on('click', clicked);
         group.on('click', clicked);
         return map;
     }
     map.move = function( callback ) {
-        moved = callback;
-        group.on('mousemove', moved);
+        group.on('mousemove', callback);
         return map;
     }
 
-    // setting mouse callbacks
-    let moved = function() {};
-    map.move( moved );
-
+    // example handler for your reference...
     let clicked = function (mark, index, selection) {
-        let screen = d3.mouse( group.node() );
-        console.log( map.screen2sphere(screen) );
+        // console.log(mark);
+
+        // let screen = d3.mouse( this ); // group.node() );
+        // console.log( map.screen2sphere(screen) );
         
-        // I want to stop propagation to the background if user clicks something in the foreground
-        d3.event.stopPropagation();
+        // // I want to stop propagation to the background if user clicks something in the foreground
+        // d3.event.stopPropagation();
     };
     map.click( clicked );
-    // todo remove these debugging behaviors after I figure out the control scheme
 
     /** Changes the elevation color scale. */
     map.setColorScale = function( scale ) {
