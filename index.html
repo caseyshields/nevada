@@ -73,30 +73,30 @@
         // map.setColorScale( elevationScale );
 
         // add the prepared 2017 tract data
-        d3.json( 'tracts/nv.json' )
+        d3.json( 'data/2017tractsNV.json' )
             .then( map.addBounds );
 
         // d3.json( 'elevation/N35W120H-100.json' )
         //     .then( map.addContour );
         // meh, just set sea level on the entire sphere rather than rendering the complex geometry resulting from data missing in the SRTM patch!
-        map.addContour( {type:"Sphere", value:-100} );
+        map.addContour( {type:"Sphere", value:-1} );
         
         // add the contour data as it loads
-        d3.json( 'elevation/N35W120H500.json' )
+        d3.json( 'data/N35W120H500.json' )
             .then( map.addContour );
-        d3.json( 'elevation/N35W120H1000.json' )
+        d3.json( 'data/N35W120H1000.json' )
             .then( map.addContour );
-        d3.json( 'elevation/N35W120H1500.json' )
+        d3.json( 'data/N35W120H1500.json' )
             .then( map.addContour );
-        d3.json( 'elevation/N35W120H2000.json' )
+        d3.json( 'data/N35W120H2000.json' )
             .then( map.addContour );
-        d3.json( 'elevation/N35W120H2500.json' )
+        d3.json( 'data/N35W120H2500.json' )
             .then( map.addContour );
-        d3.json( 'elevation/N35W120H3000.json' )
+        d3.json( 'data/N35W120H3000.json' )
             .then( map.addContour );
-        d3.json( 'elevation/N35W120H3500.json' )
+        d3.json( 'data/N35W120H3500.json' )
             .then( map.addContour );
-        d3.json( 'elevation/N35W120H4000.json' )
+        d3.json( 'data/N35W120H4000.json' )
             .then( map.addContour );
     </script>
   
