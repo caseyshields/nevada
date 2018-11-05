@@ -8,6 +8,7 @@ let createMap = function( svg, params ) {
     let tracts = {features:[]}; // GeoJSON territorial lines to be drawn
     let marks = []; // array or markers to be displayed
     
+    /** Default configuration arguments for the map component. */
     let args = {
         sphereBounds: [[-120,42],[-114,35]], // top left and bottom right bounding coordinates, defaults to Nevada
         worldScale: 6 * 60*60, // about an arcsecond to a screen pixel is what I'm aiming for...

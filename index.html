@@ -39,6 +39,23 @@
     </svg>
     <h3 class="coordinates"></h3>
     <h3 class="info"></h3>
+    <div width="600">
+    <p> An svg based map with a terrain layer and an content layer. The terrain is projected flat,
+        and the camera is moved and zoomed using CSS transforms. The content layer is semantically zoomed 
+        by moving arond svg glyphs, without scaling them. Conversion from screen to viewport to spherical
+        coordinates is handled for the user.
+    </p>
+    <p> There is some customizable interactivity. In this example moving the mouse gives you the 
+        current spherical coordinates. Clicking on a marker reveals the content of the object being
+        displayed. In this example, grey stitches were placed at the corners of the SRTM raster tiles the
+        terrain contours were computed from.
+    </p>
+    <p>Elevation data was obtained from an old version of the Shuttle Radar Topography Mission, and the 
+        territories displayed were taken from the 2017 US census tracts. The precomputed geometries are
+        loaded and displayed asynchronously as they arrive. The displayed glyphs are embedded SVG defs,
+        and can be styled with CSS.
+    </p>
+    </div>
     <script>
         let svg = d3.select("svg#svg-map");
         let coordinates = d3.select(".coordinates");
@@ -76,7 +93,7 @@
         d3.json( 'data/2017tractsNV.json' )
             .then( map.addBounds );
 
-        // d3.json( 'elevation/N35W120H-100.json' )
+        // d3.json( 'elevation/N35W120H00.json' )
         //     .then( map.addContour );
         // meh, just set sea level on the entire sphere rather than rendering the complex geometry resulting from data missing in the SRTM patch!
         map.addContour( {type:"Sphere", value:-1} );
