@@ -184,6 +184,13 @@ let createMap = function( svg, params ) {
         return map;
     };
 
+    /** Adds an individual object to the marker data */
+    map.addMark = function( mark ) {
+        marks.push( mark );
+        map.drawMarks();
+        return map;
+    };
+
     /** Adds the given GeoJson object to the contour render list.
      * @param {GeoJson} contour - Should also contain a 'height' member representing the elevation in meters
      */
