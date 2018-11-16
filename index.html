@@ -71,7 +71,7 @@
         // lets me visually check marks and contours have the same projection
 
         let map = createMap(svg, {} )
-            .marks( pins )
+            .tracks( pins )
             .click( function (mark, index, selection) {
                 info.html( JSON.stringify(mark) );
                 // I want to stop propagation to the background if user clicks something in the foreground

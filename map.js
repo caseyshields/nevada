@@ -1,13 +1,17 @@
 
+//TODO I might want to try this approach to resizing content;
+// https://chartio.com/resources/tutorials/how-to-resize-an-svg-when-the-window-is-resized-in-d3-js/
+
 /**
  * Factory which returns a D3 map component
  * @param {string} svg - A D3 selection holding the svg where the map will be rendered
 */
 let createMap = function( svg, params ) {
     let contours = []; // Array of GeoJSON contour polygons
-    let tracts = {features:[]}; // GeoJSON territorial lines to be drawn
-    let marks = []; // array or markers to be displayed
-    
+    let bounds = {features:[]}; // GeoJSON territorial lines to be drawn
+    let tracks = []; // array or markers to be displayed
+    let plots = []; // array of blips
+
     /** Default configuration arguments for the map component. */
     let args = {
         sphereBounds: [[-120,42],[-114,35]], // top left and bottom right bounding coordinates, defaults to Nevada
@@ -15,6 +19,7 @@ let createMap = function( svg, params ) {
         screenBounds: [[0,0],[600,700]],
         markerScale: 1.0,
         zoomBounds: [0.2, 5.0],
+        graticuleSteps: [10,10],
     };
     args = Object.assign( args, params );
 
@@ -35,12 +40,15 @@ let createMap = function( svg, params ) {
         .attr('class', 'graticule')
         .append( 'path' )
         .style('stroke', '#000')
-        .datum( d3.geoGraticule().step([10, 10]) );
+        .datum( d3.geoGraticule().step(args.graticuleSteps) );
     let fore = group.append('g')
         .classed('foreground', true);
-    let markers = fore.append( 'g' )
-        .attr( 'class', 'markers' )
+    let trackers = fore.append( 'g' )
+        .attr( 'class', 'tracks' )
         .selectAll( 'use' );
+    let plotters = fore.append('g')
+        .attr( 'class', 'plots' )
+        .selectAll( 'circle' );
 
     // default color scale for elevation, cribbed from 'https://en.wikipedia.org/wiki/Wikipedia:WikiProject_Maps/Conventions', though there are no given corresponding heights...
     let color = d3.scaleQuantize()
@@ -76,7 +84,8 @@ let createMap = function( svg, params ) {
         graticule.attr('d', path);
         map.drawContours();
         map.drawBounds();
-        //map.drawMarks();
+        map.drawTracks();
+        map.drawPlots();
     };
 
     /** draw the graticule, elevations, and territories */
@@ -104,30 +113,49 @@ let createMap = function( svg, params ) {
 
     /** Updates the SVG's boundary lines */
     map.drawBounds = function() {
-        territory = territory.data( tracts.features );
+        territory = territory.data( bounds.features );
         territory.exit().remove();
         territory = territory.enter()
             .append( 'path' )
             .merge( territory )
                 .attr( 'd', path );
     };
+    // TODO need to add the mtstat style bound render...
 
-    /** Updates the marks position in the SVG */
-    map.drawMarks = function( ) {
-        markers = markers.data( marks );
-        markers.exit().remove();
-        markers = markers.enter()
+    /** Update the track on the screen to match the current track data.
+     * Tracks can have custom markers and mouse interactivity. */
+    map.drawTracks = function( ) {
+        trackers = trackers.data( tracks );
+        trackers.exit().remove();
+        trackers = trackers.enter()
             .append( 'use' )
-                .attr( 'xlink:xlink:href', function(d) {return '#'+d.glyph;} )
-                // hack^ : the xlink is pared off in the attribute name conversion, but not two...
                 .on( 'click', clicked )
-            .merge( markers )
-                .attr( 'class', function(d){return d.class;} )
+            .merge( trackers )
                 .each( function(d) {
                     let screen = map.sphere2screen( [d.x, d.y] );
                     d3.select(this)
                     .attr('x', screen[0])
-                    .attr('y', screen[1]);
+                    .attr('y', screen[1])
+                    .attr('class', d.class)
+                    .attr( 'xlink:xlink:href', '#'+d.glyph);
+                });
+    }; // TODO I think the track selection should be keyed...
+
+    /** Updates the plots on the screen to match the current plot data.
+     * Plots are only styled circles with no mouse interactivity. */
+    map.drawPlots = function( ) {
+        plotters = plotters.data( plots );
+        plotters.exit().remove();
+        plotters = plotters.enter()
+            .append( 'circle' )
+            .merge( plotters )
+                .each( function(d) {
+                    let screen = map.sphere2screen( [d.x, d.y] );
+                    d3.select(this)
+                    .attr('cx', screen[0])
+                    .attr('cy', screen[1])
+                    .attr('r', 3) // TODO should radius be scaled?
+                    .attr('class', d.class);
                 });
     };
 
@@ -142,14 +170,15 @@ let createMap = function( svg, params ) {
             back.attr('transform', d3.event.transform.toString() );
             
             // semantically zoom map markers by altering thier attributes.
-            map.drawMarks( );
+            map.drawTracks( );
+            map.drawPlots( );
         } );
     group.call( zoom );
 
     // public mutators for mouse event handlers...
     map.click = function( callback ) {
         clicked = callback;
-        markers.on('click', clicked);
+        trackers.on('click', clicked);
         group.on('click', clicked);
         return map;
     }
@@ -178,21 +207,52 @@ let createMap = function( svg, params ) {
     }
 
     /** sets the array holding the map's marker data */
-    map.marks = function( array ) {
-        marks = array;
-        map.drawMarks();
+    map.tracks = function( array ) {
+        if (!array) 
+            return tracks;
+        
+        tracks = array;
+        // map.drawTracks();
+        return map;
+    };
+    /** sets the array holding the map's marker data */
+    map.plots = function( array ) {
+        if (!array) 
+            return plots;
+        
+        plots = array;
+        // map.drawPlots();
         return map;
     };
 
-    /** Adds an individual object to the marker data */
-    map.addMark = function( mark ) {
-        marks.push( mark );
-        map.drawMarks();
+    /** Clears all marks from the map.
+     * @returns the map component */
+    map.clearPlots = function() {
+        while (plots.length > 0)
+            plots.pop();
+        return map;
+    }
+
+    /** Adds an individual object to the marker data.
+     * The object needs the following fields to display properly;
+     * @param {number} mark.x : longitude of the mark
+     * @param {number} mark.y : latitude of the mark
+     * @param {string} glyph : name of the svg def to use as a marker
+     * @param {string} class : string containing the CSS class to be applied to the mark
+     * @returns The map object;
+    */
+    map.addTrack = function( track ) {
+        tracks.push( track );
+        return map;
+    };
+
+    map.addPlot = function( plot ) {
+        plots.push( plot );
         return map;
     };
 
     /** Adds the given GeoJson object to the contour render list.
-     * @param {GeoJson} contour - Should also contain a 'height' member representing the elevation in meters
+     * @param {GeoJson} contour - Should also contain a 'value' member representing the elevation in meters
      */
     map.addContour = function( contour ) {
         contours.push(contour);
@@ -205,7 +265,7 @@ let createMap = function( svg, params ) {
      * @param {GeoJson} bound - A line geometry to be drawn on top of the contours
      */
     map.addBounds = function( bound ) {
-        tracts.features.push(bound);
+        bounds.features.push(bound);
         map.drawBounds();
         return map;
     };
