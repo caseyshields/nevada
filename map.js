@@ -16,9 +16,9 @@ let createMap = function( svg, params ) {
     let args = {
         sphereBounds: [[-120,42],[-114,35]], // top left and bottom right bounding coordinates, defaults to Nevada
         worldScale: 6 * 60*60, // about an arcsecond to a screen pixel is what I'm aiming for...
-        screenBounds: [[0,0],[600,700]],
+        //screenBounds: [[0,0],[600,700]],
         markerScale: 1.0,
-        zoomBounds: [0.2, 5.0],
+        zoomBounds: [0.1, 10.0],
         graticuleSteps: [10,10],
     };
     args = Object.assign( args, params );
@@ -120,7 +120,6 @@ let createMap = function( svg, params ) {
             .merge( territory )
                 .attr( 'd', path );
     };
-    // TODO need to add the mtstat style bound render...
 
     /** Update the track on the screen to match the current track data.
      * Tracks can have custom markers and mouse interactivity. */
@@ -161,10 +160,10 @@ let createMap = function( svg, params ) {
 
     // D3.zoom collects various mouse gestures into a transform which is cached with affected DOM nodes.
     // this transfor can then be appllied a number of ways
-    let worldBounds = args.sphereBounds.map(projection);
+    //let worldBounds = args.sphereBounds.map(projection);
     let zoom = d3.zoom()
         .scaleExtent( args.zoomBounds )
-        .translateExtent( worldBounds )
+        //.translateExtent( worldBounds )
         .on('zoom', function() {
             // Applies the current zoom transform to the ground geometries as a CSS transform
             back.attr('transform', d3.event.transform.toString() );
@@ -187,7 +186,7 @@ let createMap = function( svg, params ) {
         return map;
     }
 
-    // example handler for your reference...
+    // example handler for reference...
     let clicked = function (mark, index, selection) {
         // console.log(mark);
 
@@ -224,6 +223,9 @@ let createMap = function( svg, params ) {
         // map.drawPlots();
         return map;
     };
+    //TODO another way of thinking about this would be adding the data to the DOM Selection Node
+    // This allows the map to be drawn on arbitrary data anywhere on the document. The default render
+    // method would then operate on Selections, rendering the data in each of the selection nodes...
 
     /** Clears all marks from the map.
      * @returns the map component */

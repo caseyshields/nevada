@@ -21,7 +21,10 @@
     </style>
 </head>
 <body>
-    <svg id="svg-map" width="600" height="700">
+    <svg id="svg-map"
+    viewBox="0 0 500 600"
+    preserveAspectRatio="xMidYMid meet">
+    <!-- width="600" height="700" -->
         <defs>
             <g id="source">
                 <title> Source </title>
@@ -50,7 +53,7 @@
         displayed. In this example, grey stitches were placed at the corners of the SRTM raster tiles the
         terrain contours were computed from.
     </p>
-    <p>Elevation data was obtained from an old version of the Shuttle Radar Topography Mission, and the 
+    <p> Elevation data was obtained from an old version of the Shuttle Radar Topography Mission, and the 
         territories displayed were taken from the 2017 US census tracts. The precomputed geometries are
         loaded and displayed asynchronously as they arrive. The displayed glyphs are embedded SVG defs,
         and can be styled with CSS.
