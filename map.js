@@ -72,7 +72,7 @@ let createMap = function( svg, params ) {
         // .center( -toCenter )
         
         // I should eventually clip, but I'm not sure what stage to do it at...
-        //.clipExtent( [[0,0], [600,700]] ) // screen coordinates of the projection output
+        //.clipExtent( screenBounds ) // screen coordinates of the projection output
        ;
 
     // D3.path can generate various viewport geometries from raw geometries by applying a projection
