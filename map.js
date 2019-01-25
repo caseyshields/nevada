@@ -237,8 +237,8 @@ let createMap = function( svg, params ) {
 
     /** Adds an individual object to the marker data.
      * The object needs the following fields to display properly;
-     * @param {number} mark.x : longitude of the mark
-     * @param {number} mark.y : latitude of the mark
+     * @param {number} mark.lon : longitude of the mark
+     * @param {number} mark.lat : latitude of the mark
      * @param {string} glyph : name of the svg def to use as a marker
      * @param {string} class : string containing the CSS class to be applied to the mark
      * @returns The map object;
