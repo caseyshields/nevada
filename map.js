@@ -131,7 +131,7 @@ let createMap = function( svg, params ) {
                 .on( 'click', clicked )
             .merge( trackers )
                 .each( function(d) {
-                    let screen = map.sphere2screen( [d.x, d.y] );
+                    let screen = map.sphere2screen( [d.lon, d.lat] );
                     d3.select(this)
                     .attr('x', screen[0])
                     .attr('y', screen[1])
@@ -149,7 +149,7 @@ let createMap = function( svg, params ) {
             .append( 'circle' )
             .merge( plotters )
                 .each( function(d) {
-                    let screen = map.sphere2screen( [d.x, d.y] );
+                    let screen = map.sphere2screen( [d.lon, d.lat] );
                     d3.select(this)
                     .attr('cx', screen[0])
                     .attr('cy', screen[1])

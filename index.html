@@ -70,7 +70,7 @@
         // Mark each intersection of integer longitude and latitude
         for (let x=-120; x<=-114; x++)
             for (let y=35; y<=42; y++)
-                pins.push( {x:x, y:y, class:'stitches', glyph:'sink'} );
+                pins.push( {lon:x, lat:y, class:'stitches', glyph:'sink'} );
         // lets me visually check marks and contours have the same projection
 
         let map = createMap(svg, {} )
