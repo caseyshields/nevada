@@ -1,7 +1,4 @@
 
-//TODO I might want to try this approach to resizing content;
-// https://chartio.com/resources/tutorials/how-to-resize-an-svg-when-the-window-is-resized-in-d3-js/
-
 /**
  * Factory which returns a D3 map component
  * @param {string} svg - A D3 selection holding the svg where the map will be rendered
@@ -154,7 +151,7 @@ let createMap = function( svg, params ) {
                     .attr('cx', screen[0])
                     .attr('cy', screen[1])
                     .attr('r', 3) // TODO should radius be scaled?
-                    .attr('class', d.class);
+                    .attr('class', classify(d));
                 });
     };
 
@@ -188,7 +185,7 @@ let createMap = function( svg, params ) {
 
     // example handler for reference...
     let clicked = function (mark, index, selection) {
-        // console.log(mark);
+        console.log(mark);
 
         // let screen = d3.mouse( this ); // group.node() );
         // console.log( map.screen2sphere(screen) );
@@ -197,6 +194,15 @@ let createMap = function( svg, params ) {
         // d3.event.stopPropagation();
     };
     map.click( clicked );
+
+    // by default plots are given the same class as the added event.
+    let classify = function( d ) {
+        return d.class;
+    }
+    map.classifier = function( f ) {
+        classify = f;
+        return map;
+    }
 
     /** Changes the elevation color scale. */
     map.setColorScale = function( scale ) {
