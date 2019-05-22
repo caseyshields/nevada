@@ -259,6 +259,14 @@ let createMap = function( svg, params ) {
         return map;
     };
 
+    map.removePlot = function( plot ) {
+        let index = plots.findIndex( (event)=>{return plot===event} );
+        if (index>=0)
+            plots = plots.slice( index );
+        // TODO we shouldn't make assumtions and just remove the one element
+        // we should also add a expire() method which just culls a whole bunch of events...
+    }
+
     /** Adds the given GeoJson object to the contour render list.
      * @param {GeoJson} contour - Should also contain a 'value' member representing the elevation in meters
      */
