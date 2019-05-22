@@ -241,6 +241,16 @@ let createMap = function( svg, params ) {
         return map;
     }
 
+    /** Clears all plots older than the given time */
+    map.expire = function(time) {
+        let n=0;
+        while (n<plots.length)
+            if (plots[n].time<time)
+                n++;
+            else break;
+        plots = plots.slice(n);
+    }
+
     /** Adds an individual object to the marker data.
      * The object needs the following fields to display properly;
      * @param {number} mark.lon : longitude of the mark
@@ -259,13 +269,13 @@ let createMap = function( svg, params ) {
         return map;
     };
 
-    map.removePlot = function( plot ) {
-        let index = plots.findIndex( (event)=>{return plot===event} );
-        if (index>=0)
-            plots = plots.slice( index );
-        // TODO we shouldn't make assumtions and just remove the one element
-        // we should also add a expire() method which just culls a whole bunch of events...
-    }
+    // map.removePlot = function( plot ) {
+    //     let index = plots.findIndex( (event)=>{return plot===event} );
+    //     if (index>=0)
+    //         plots = plots.slice( index );
+    //     // TODO we shouldn't make assumtions and just remove the one element
+    //     // we should also add a expire() method which just culls a whole bunch of events...
+    // }
 
     /** Adds the given GeoJson object to the contour render list.
      * @param {GeoJson} contour - Should also contain a 'value' member representing the elevation in meters
