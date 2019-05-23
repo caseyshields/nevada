@@ -244,8 +244,8 @@ let createMap = function( svg, params ) {
     /** Clears all plots older than the given time */
     map.expire = function(time) {
         let n=0;
-        while (n<plots.length)
-            if (plots[n].time<time)
+        while (n < plots.length)
+            if (plots[n].time <= time)
                 n++;
             else break;
         plots = plots.slice(n);
