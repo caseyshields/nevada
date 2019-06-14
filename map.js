@@ -1,4 +1,8 @@
 
+// TODO change plot/track naming convention to differentiate between markers and interactive elements
+// TODO provide for embedded components?
+// TODO use a more efficient circular buffer for data
+
 /**
  * Factory which returns a D3 map component
  * @param {string} svg - A D3 selection holding the svg where the map will be rendered
@@ -17,6 +21,7 @@ let createMap = function( svg, params ) {
         markerScale: 1.0,
         zoomBounds: [0.1, 10.0],
         graticuleSteps: [10,10],
+        plotRadius : 5
     };
     args = Object.assign( args, params );
 
@@ -150,14 +155,14 @@ let createMap = function( svg, params ) {
                     d3.select(this)
                     .attr('cx', screen[0])
                     .attr('cy', screen[1])
-                    .attr('r', 3) // TODO should radius be scaled?
+                    .attr('r', args.plotRadius)
                     .attr('class', classify(d));
                 });
     };
 
     // D3.zoom collects various mouse gestures into a transform which is cached with affected DOM nodes.
-    // this transfor can then be appllied a number of ways
-    //let worldBounds = args.sphereBounds.map(projection);
+    // this transform can then be applied a number of ways
+    // let worldBounds = args.sphereBounds.map(projection);
     let zoom = d3.zoom()
         .scaleExtent( args.zoomBounds )
         //.translateExtent( worldBounds )
@@ -226,12 +231,8 @@ let createMap = function( svg, params ) {
             return plots;
         
         plots = array;
-        // map.drawPlots();
         return map;
     };
-    //TODO another way of thinking about this would be adding the data to the DOM Selection Node
-    // This allows the map to be drawn on arbitrary data anywhere on the document. The default render
-    // method would then operate on Selections, rendering the data in each of the selection nodes...
 
     /** Clears all marks from the map.
      * @returns the map component */
@@ -268,14 +269,6 @@ let createMap = function( svg, params ) {
         plots.push( plot );
         return map;
     };
-
-    // map.removePlot = function( plot ) {
-    //     let index = plots.findIndex( (event)=>{return plot===event} );
-    //     if (index>=0)
-    //         plots = plots.slice( index );
-    //     // TODO we shouldn't make assumtions and just remove the one element
-    //     // we should also add a expire() method which just culls a whole bunch of events...
-    // }
 
     /** Adds the given GeoJson object to the contour render list.
      * @param {GeoJson} contour - Should also contain a 'value' member representing the elevation in meters
