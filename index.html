@@ -4,7 +4,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
     <script src="https://d3js.org/d3.v5.js" charset="utf-8"></script>
-    <script src="map.js" charset="utf-8"></script>
     <title>D3 Map Component</title>
     <style>
         path { fill: none; }
@@ -22,9 +21,9 @@
 </head>
 <body>
     <svg id="svg-map"
+    width="400"
     viewBox="0 0 500 600"
     preserveAspectRatio="xMidYMid meet">
-    <!-- width="600" height="700" -->
         <defs>
             <g id="source">
                 <title> Source </title>
@@ -59,7 +58,8 @@
         and can be styled with CSS.
     </p>
     </div>
-    <script>
+    <script type="module" >
+        import Atlas from './map.js';
         let svg = d3.select("svg#svg-map");
         let coordinates = d3.select(".coordinates");
         let info = d3.select(".info");
@@ -73,7 +73,7 @@
                 pins.push( {lon:x, lat:y, class:'stitches', glyph:'sink'} );
         // lets me visually check marks and contours have the same projection
 
-        let map = createMap(svg, {} )
+        let map = Atlas(svg, {} )
             .tracks( pins )
             .click( function (mark, index, selection) {
                 info.html( JSON.stringify(mark) );

@@ -1,13 +1,14 @@
-
 // TODO change plot/track naming convention to differentiate between markers and interactive elements
 // TODO provide for embedded components?
 // TODO use a more efficient circular buffer for data
+
+export default createMap;
 
 /**
  * Factory which returns a D3 map component
  * @param {string} svg - A D3 selection holding the svg where the map will be rendered
 */
-let createMap = function( svg, params ) {
+function createMap( svg, params ) {
     let contours = []; // Array of GeoJSON contour polygons
     let bounds = {features:[]}; // GeoJSON territorial lines to be drawn
     let tracks = []; // array or markers to be displayed
