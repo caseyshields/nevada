@@ -69,11 +69,13 @@ function createAtlas(selection, params) {
      * will be rendered using the specified component.
      * @param {String} name - The name of the layer, will also be used as the class attribute for the layer's SVG group
      * @param {Object} component - A D3 Component which also has the 'projection' method
+     * @return {Object} The atlas object for fluent styling
      */
     atlas.addLayer = function(name, component) {
         if (index[name])
             throw new Error(`Atlas already contains a layer called ${name}`);
         index[name] = component;
+        return atlas;
     }
 
     atlas.projection = function( p ) {
