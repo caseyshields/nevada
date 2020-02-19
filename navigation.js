@@ -1,10 +1,10 @@
 // Adapted from 'Aviation Formulary v1.46' by Ed Williams
 // http://edwilliams.org/avform.htm
 
-export default {
+let degreeFormat = d3.format(" 3");
+let minuteFormat = d3.format("02.3f");
 
-    degreeFormat : d3.format(" 3"),
-    minuteFormat : d3.format("02.3f"),
+export default {
     
     deg2rad : (deg) => deg*Math.PI/180,
     rad2deg : (rad) => rad*180/Math.PI,
