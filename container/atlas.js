@@ -22,7 +22,7 @@ function createAtlas(selection, params) {
     // create a projection which maps spherical coordinate onto planar viewport coordinates
     let lt = args.sphereBounds[0];
     let rb = args.sphereBounds[1];
-    let toCenter = [ -(lt[0]+br[0])/2.0, -(lt[1]+br[1])/2.0];
+    let toCenter = [ -(lt[0]+rb[0])/2.0, -(lt[1]+rb[1])/2.0];
     let tMercator = 
         d3.geoTransverseMercator()
             .rotate( toCenter )
@@ -30,7 +30,7 @@ function createAtlas(selection, params) {
             ;//.clipExtent( screenBounds );
 
     // D3.path can generate various viewport geometries from raw geometries by applying a projection
-    let path = d3.geoPath().projection( tmercator );
+    let path = d3.geoPath().projection( tMercator );
 
     // the atlas component needs to know which component renders which layer
     let index = {};
@@ -80,9 +80,9 @@ function createAtlas(selection, params) {
 
     atlas.projection = function( p ) {
         if (!p || p==undefined)
-            return tmercator;
-        tmercator = p;
-        path = d3.geoPath().projection( tmercator );
+            return tMercator;
+        tMercator = p;
+        path = d3.geoPath().projection( tMercator );
         return atlas;
     }
 
@@ -90,7 +90,7 @@ function createAtlas(selection, params) {
     // this transform can then be used in CSS tranforms, or your own positioning methods
     let zoom = d3.zoom()
         .scaleExtent( args.zoomBounds )
-        .translateExtent( worldBounds )
+        // .translateExtent( worldBounds )
         .on('zoom', function() {
             // applies the current zoom's affine transform to 'ground' geometry as a CSS transform
             selection.selectAll('g')
@@ -122,7 +122,7 @@ function createAtlas(selection, params) {
         let screen = d3.mouse(this);
         let sphere = atlas.screen2sphere(screen)
         let details = {screen, sphere, item}
-        console.log( JSON.stringify(mark) );
+        console.log( JSON.stringify(item) );
 
         // useful when you wnat no more handlers to be invoked after this one...
         //d3.event.stopPropagation()
@@ -139,7 +139,7 @@ function createAtlas(selection, params) {
             (screen[0] - t.x) / t.k,
             (screen[1] - t.y) / t.k
         ];
-        let sphere = tmercator.invert( view );
+        let sphere = tMercator.invert( view );
         return sphere;
     }
 
@@ -147,8 +147,8 @@ function createAtlas(selection, params) {
      * @param {number[]} sphere - an array holding the geodetic [lon, lat] coordinates
      * @return {number[]} an array holding the [x,y] screen coordinates
      */
-    atlas.sphere2screen = function(screen) {
-        let view = tmercator(sphere);
+    atlas.sphere2screen = function(sphere) {
+        let view = tMercator(sphere);
         let t = d3.zoomTransform(atlas.node());
         let screen = [
             view[0]*t.k + t.x,
