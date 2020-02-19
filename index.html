@@ -104,8 +104,11 @@ async function main() {
         terrain.push(elevation);
     }
     
-    let state = [targets];//[targets, tracts, terrain];
-    // need to properly structure state! [{class:...,data:...},...]?
+    let state = [
+        {classy:'targets', data:targets}
+        // {classy:'territory', data:tracts},
+        // {classy:'terrain', data:terrain}
+    ];
 
     let atlas = Atlas(svg, {})
         .move( function() {

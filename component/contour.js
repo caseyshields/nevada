@@ -1,50 +1,72 @@
-/** Contour draws a GeoJson dataset as a SVG Path after applying a D3 Projection supplied at construction.
- * @param {function} config.classifier - a function which maps a datum onto a string which is used to set the markup's class
- * @param {projection} config.projection = a function which transforms the given geodetic coordinates to screen, defaults to a mercator projection
+/** Contour draws a GeoJson allay as a Group of SVG Paths. A projection
+ * is applied to GeoJson coordinates and a camera transform is applied to
+ * the enclosing SVG Group. The generated Dom has the following structure;
+ ``` html
+ <g transform="${projection}>"
+    <path
+        class="${classifier(datum)}"
+        d="${}">
+    </path>
+    <!-- a Path is created for each GeoJson Feature the component is joined to -->
+ </g>
+ ```
+ * @param {Object} projection - A D3 Projection to be applied to the GeoJson data
  */
-export default function() {
+export default function( projection ) {
 
-    let projection = null;
-    let path = null;
+    // a D3 path generator which applies a projection to GeoJson data
+    let path = d3.geoPath().projection( projection );
+
+    // function/constant used to determine the class attribute of the generated path
     let classifier = null;
 
-    function render( parent, data) {
+    /** default render function
+     * @param {Object} parent - a D3 selection holding the root node(s) of the visualization
+     * @param {Array} data - the GeoJson data array the component will render
+     */
+    function contour(parent, data) {
+        // TODO consider projecting and quantizing to make DOM smaller;
+        let projected = d3.geoProject(data, projection);
+        let approximated = d3.geoQuantize( projected, digits);
 
-        let contours = parent.selectAll('path').data(data);
-
-        contours.exit().remove();
-
-        contours = contours.enter()
+        // D3 general update pattern; join the DOM selection to the data
+        let selection = parent.selectAll('path').data(data);
+        selection.exit().remove();
+        selection = selection.enter()
             .append('path')
                 .attr('class', classifier)
-                //.attr('pointer-events', ... )
-                // TODO we might want to se mouse interactivity so events pass through these possibly complicated geometries;
-                // especially since the main use case of the mouse is controlling the camera
-            .merge( contours)
                 .attr('d', path)
-                //.attr('class', classifier())
-                // TODO might want to make styling updateable...
+                //.attr('pointer-events', ... ) // consider interactivity...
+            .merge( selection)
+                // TODO consider moving attributes here if they need to be dynamic
     };
 
-    render.projection = function(f) {
+    /** A D3 style mutator for the Contour component's current projection
+     * @param {function} p - A D3 Projection
+     * @return Returns the current projection if p isn't given, otherwise returns the Contour object
+    */
+    contour.projection = function(f) {
         if (!f || f==undefined)
             return projection;
         projection = f;
-
-        // also create an SVG path generator for the projection
         path = d3.geoPath().projection(f);
-
-        return render;
+        return contour;
     }
 
-    /** This will control the CSS class of the SVG path tag when it is created */
-    render.classifier = function(c) {
+    /** A D3 style mutator for the classifier, which determines the SVG Path's class attribute.
+     * @param {function} c - a function which takes the datum and returns a CSS class string
+     * @return The current classifier if c is not supplied, otherwise returns the contour object
+    */
+    contour.classifier = function(c) {
         if (!c || c==undefined)
             return classifier;
         classifier = c;
 
-        return render;
+        return contour;
     }
 
-    return render;
+    // mark the contour as not an overlay, so the camera transform is applied to it in a container.
+    contour.overlay = false;
+
+    return contour;
 }
