@@ -6,21 +6,36 @@
     <script src="https://d3js.org/d3.v5.js" charset="utf-8"></script>
     <title>D3 Map Component</title>
     <style>
+        .overlay {
+            position: absolute;
+            top: 5%;
+            left: 5%;
+        }
         path { fill: none; }
         svg { 
             background-color:none;
             outline: medium solid grey;
         }
-        use.stitches {
+        use.target {
             stroke: grey;
             stroke-width: 3px;
             fill: none;
         }
         g.territory { stroke: grey; }
+
+        .h4000 { fill: #FFFFFF; }
+        .h3500 { fill: #F8F8F8; }
+        .h3000 { fill: #EEEEEE; }
+        .h2500 { fill: #E8E8E8; }
+        .h2000 { fill: #DDDDDD; }
+        .h1500 { fill: #D8D8D8; }
+        .h1000 { fill: #CCCCCC; }
+        .h500 { fill: #C8C8C8; }
+        .h0 { fill: #BBBBBB; }
     </style>
 </head>
 <body>
-    <svg id="svg-map"
+    <svg id="atlas"
     width="400"
     viewBox="0 0 500 600"
     preserveAspectRatio="xMidYMid meet">
@@ -41,24 +56,91 @@
     </svg>
     <h3 class="coordinates"></h3>
     <h3 class="info"></h3>
-    <div width="600">
-    <p> An D3 map with a terrain layer and an content layer. The terrain is projected flat,
-        and the camera is moved and zoomed using CSS transforms. The content layer is semantically zoomed 
-        by moving arond svg glyphs, without scaling them. Conversion from screen to viewport to spherical
-        coordinates is handled for the user.
-    </p>
-    <p> There is some customizable interactivity. In this example moving the mouse gives you the 
-        current spherical coordinates. Clicking on a marker reveals the content of the object being
-        displayed. In this example, grey stitches were placed at the corners of the SRTM raster tiles the
-        terrain contours were computed from.
-    </p>
-    <p> Elevation data was obtained from an old version of the Shuttle Radar Topography Mission, and the 
-        territories displayed were taken from the 2017 US census tracts. The precomputed geometries are
-        loaded and displayed asynchronously as they arrive. The displayed glyphs are embedded SVG defs,
-        and can be styled with CSS.
-    </p>
-    </div>
-    <script type="module" >
+    <details width="600">
+        <summary>Details</summary>
+        <p> An D3 map with a terrain layer and an content layer. The terrain is projected flat,
+            and the camera is moved and zoomed using CSS transforms. The content layer is semantically zoomed 
+            by moving arond svg glyphs, without scaling them. Conversion from screen to viewport to spherical
+            coordinates is handled for the user.
+        </p>
+        <p> There is some customizable interactivity. In this example moving the mouse gives you the 
+            current spherical coordinates. Clicking on a marker reveals the content of the object being
+            displayed. In this example, grey stitches were placed at the corners of the SRTM raster tiles the
+            terrain contours were computed from.
+        </p>
+        <p> Elevation data was obtained from an old version of the Shuttle Radar Topography Mission, and the 
+            territories displayed were taken from the 2017 US census tracts. The precomputed geometries are
+            loaded and displayed asynchronously as they arrive. The displayed glyphs are embedded SVG defs,
+            and can be styled with CSS.
+        </p>
+    </details>
+<script type="module">
+import Atlas from './container/atlas.js';
+import Contour from './component/contour.js';
+import Stamp from './component/stamp.js';
+import Navigation from './navigation.js';
+
+main();
+async function main() {
+
+    let svg = d3.select('svg#atlas');
+    let coordinates = d3.select('.coordinates');
+    let info = d3.select('.info');
+
+    // Mark each intersection of integer longitude and latitude
+    let targets = [];
+    for (let x=-120; x<=-114; x++)
+        for (let y=35; y<=42; y++)
+            targets.push( {lon:x, lat:y, class:'target', glyph:'sink'} );
+    // lets me visually check marks and contours have the same projection
+
+    // load the GeoJson census tract features
+    let tracts = await d3.json('data/2017tractsNV.json');
+
+    // load elevation contours
+    let terrain = [{type:'Sphere', value:0}];
+    for (let m=0; m<=4000; m+=500) {
+        let elevation = await d3.json(`data/N35W120H${m}.json`);
+        terrain.push(elevation);
+    }
+    
+    let state = [targets];//[targets, tracts, terrain];
+    // need to properly structure state! [{class:...,data:...},...]?
+
+    let atlas = Atlas(svg, {})
+        .move( function() {
+            let screen = d3.mouse(this);
+            let sphere = atlas.screen2sphere(screen);
+            let lon = Navigation.degrees2sexagesimal( sphere[0], 'W', 'E' );
+            let lat = Navigation.degrees2sexagesimal( sphere[1], 'S', 'N' );
+            coordinates.html(`${lat} / ${lon}`);
+        });
+    atlas
+        // .addLayer( 'terrain', Contour()
+        //     .projection( atlas.projection() )
+        //     .classifier( d=>`h${d.value}` ) )
+        // .addLayer( 'territory', Contour()
+        //     .projection( atlas.projection() )
+        //     .classifier( d=>`tract${d.properties.TRACTCE}`) )
+        .addLayer( 'targets', Stamp()
+            .transform( atlas.projection() )
+            .classifier( d=>d.class )
+            .glyph( d=>d.glyph )
+            .clicker( showInfo ) );
+
+    // the default click action updates the info panel
+    function showInfo(d) {
+        if(!d || d==undefined)
+            return;
+        let json = JSON.stringify(d, null, '\t');
+        info.html(`<pre>${json}</pre>`);
+    }
+
+    atlas(svg, state);
+}
+
+</script>
+    <!-- <script type="module" >
         import Atlas from './map.js';
         let svg = d3.select("svg#svg-map");
         let coordinates = d3.select(".coordinates");
@@ -118,7 +200,7 @@
             .then( map.addContour );
         d3.json( 'data/N35W120H4000.json' )
             .then( map.addContour );
-    </script>
+    </script> -->
   
 </body>
 </html>
