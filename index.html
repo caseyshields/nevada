@@ -2,20 +2,31 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
+    <!-- <meta name="viewport" content="width=device-width"> -->
     <script src="https://d3js.org/d3.v5.js" charset="utf-8"></script>
     <title>D3 Map Component</title>
     <style>
+        body {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        svg#visualization {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+        }
         .overlay {
             position: absolute;
-            top: 5%;
-            left: 5%;
-        }
-        path { fill: none; }
-        svg { 
             background-color:lightblue;
-            outline: medium solid grey;
+            padding: 5px;
+            border-radius: 5px;
+            /* outline: medium solid grey; */
         }
+        details { top: 5%; left: 5%; right: 5% }
+        .coordinates { bottom: 5%; right: 5%; }
+        .info { bottom: 5%; left: 5%; }
         g.territory, use.target {
             stroke: grey;
             stroke-width: 3px;
@@ -34,19 +45,12 @@
 </head>
 <body>
     <svg id="visualization"
-    width="400"
-    viewBox="0 0 500 600"
-    preserveAspectRatio="xMidYMid meet"
-    pointer-events="all">
-        <g class="atlas">
-            
+        viewBox="0 0 500 600"
+        preserveAspectRatio="xMidYMid meet"
+        pointer-events="all">
+        <g class="atlas">            
         </g>
         <defs>
-            <g id="source">
-                <title> Source </title>
-                <desc> A glyph representing a source. </desc>
-                <circle r="10"></circle>
-            </g>
             <g id="sink">
                 <title> Sink </title>
                 <desc> A glyph representing a sink. </desc>
@@ -54,9 +58,9 @@
             </g>
         </defs>
     </svg>
-    <h3 class="coordinates"></h3>
-    <h3 class="info"></h3>
-    <details width="600">
+    <h4 class="overlay coordinates"></h3>
+    <h4 class="overlay info"></h3>
+    <details class="overlay">
         <summary>Details</summary>
         <p> An D3 map with a terrain layer and an content layer. The terrain is projected flat,
             and the camera is moved and zoomed using CSS transforms. The content layer is semantically zoomed 
@@ -104,11 +108,12 @@ async function main() {
         let elevation = await d3.json(`data/N35W120H${m}.json`);
         terrain.push(elevation);
     }
+    //TODO let these load asynchronously then add them to the atlas and refresh!
     
     let state = [
         {classy:'targets', data:targets},
-        {classy:'territory', data:territory}
-        // {classy:'terrain', data:terrain}
+        {classy:'territory', data:territory},
+        {classy:'terrain', data:terrain}
     ];
 
     let atlas = Atlas(svg, {})
@@ -120,9 +125,9 @@ async function main() {
             coordinates.html(`${lat} / ${lon}`);
         });
     atlas
-        // .addLayer( 'terrain', Contour()
-        //     .projection( atlas.projection() )
-        //     .classifier( d=>`h${d.value}` ) )
+        .addLayer( 'terrain', Contour()
+            .projection( atlas.projection() )
+            .classifier( d=>`h${d.value}` ) )
         .addLayer( 'territory', Contour()
             .projection( atlas.projection() )
             .classifier( d=>`tract${d.properties.TRACTCE}`) )
@@ -141,37 +146,13 @@ async function main() {
     }
 
     atlas(svg, state);
-    //atlas.repaint();
 }
-
+// // default color scale for elevation, cribbed from 'https://en.wikipedia.org/wiki/Wikipedia:WikiProject_Maps/Conventions', though there are no given corresponding heights...
+    // let color = d3.scaleQuantize()
+    //     .range(['#ACD0A5','#94BF8B','#A8C68F','#BDCC96','#D1D7AB','#E1E4B5',//green to tan
+    //     '#EFEBC0','#E8E1B6','#DED6A3','#D3CA9D','#CAB982','#C3A76B','#B9985A','#AA8753',//tan to brown
+    //     '#AC9A7C','#BAAE9A','#CAC3B8','#E0DED8','#F5F4F2'])// brown to white
+    //     .domain([-100, 4400]);
 </script>
-    <!--// add the prepared 2017 tract data
-        d3.json( 'data/2017tractsNV.json' )
-            .then( map.addBounds );
-
-        // d3.json( 'elevation/N35W120H00.json' )
-        //     .then( map.addContour );
-        // meh, just set sea level on the entire sphere rather than rendering the complex geometry resulting from data missing in the SRTM patch!
-        map.addContour( {type:"Sphere", value:-1} );
-        
-        // add the contour data as it loads
-        d3.json( 'data/N35W120H500.json' )
-            .then( map.addContour );
-        d3.json( 'data/N35W120H1000.json' )
-            .then( map.addContour );
-        d3.json( 'data/N35W120H1500.json' )
-            .then( map.addContour );
-        d3.json( 'data/N35W120H2000.json' )
-            .then( map.addContour );
-        d3.json( 'data/N35W120H2500.json' )
-            .then( map.addContour );
-        d3.json( 'data/N35W120H3000.json' )
-            .then( map.addContour );
-        d3.json( 'data/N35W120H3500.json' )
-            .then( map.addContour );
-        d3.json( 'data/N35W120H4000.json' )
-            .then( map.addContour );
-    </script> -->
-  
 </body>
 </html>
