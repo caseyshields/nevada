@@ -11,10 +11,6 @@ export default createAtlas;
  */
 function createAtlas(selection, params) {
 
-    // TODO should the component create it's own group?
-    // let selection = svg.append('g')
-    //     .attr('class', 'atlas');
-
     /** default configuration arguments for the map component */
     let args = {
         sphereBounds : [[-120,42],[-114,35]], // top left and bottom right bounding coordinates, defaults to Nevada
@@ -174,17 +170,17 @@ function createAtlas(selection, params) {
         return atlas;
     }
 
-    // example handler for reference
-    let clicked = function (item, index, selection) {
-        let screen = d3.mouse(this);
-        let sphere = atlas.screen2sphere(screen)
-        let details = {screen, sphere, item}
-        console.log( JSON.stringify(item) );
+    // // example handler for reference
+    // let clicked = function (item, index, selection) {
+    //     let screen = d3.mouse(this);
+    //     let sphere = atlas.screen2sphere(screen)
+    //     let details = {screen, sphere, item}
+    //     console.log( JSON.stringify(item) );
 
-        // useful when you wnat no more handlers to be invoked after this one...
-        //d3.event.stopPropagation()
-    }
-    atlas.click( clicked );
+    //     // useful when you wnat no more handlers to be invoked after this one...
+    //     //d3.event.stopPropagation()
+    // }
+    // atlas.click( clicked );
 
     /** Convert from viewport coordinates into spherical coordinates, by inverting the camera transform, then inverting the projection transform.
      * @param {number[]} screen - an array holding the [x,y] screen coordinates
