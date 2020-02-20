@@ -13,16 +13,14 @@
         }
         path { fill: none; }
         svg { 
-            background-color:none;
+            background-color:lightblue;
             outline: medium solid grey;
         }
-        use.target {
+        g.territory, use.target {
             stroke: grey;
             stroke-width: 3px;
             fill: none;
         }
-        g.territory { stroke: grey; }
-
         .h4000 { fill: #FFFFFF; }
         .h3500 { fill: #F8F8F8; }
         .h3000 { fill: #EEEEEE; }
@@ -97,6 +95,7 @@ async function main() {
 
     // load the GeoJson census tract features
     let tracts = await d3.json('data/2017tractsNV.json');
+    let territory = tracts.features;
 
     // load elevation contours
     let terrain = [{type:'Sphere', value:0}];
@@ -106,8 +105,8 @@ async function main() {
     }
     
     let state = [
-        {classy:'targets', data:targets}
-        // {classy:'territory', data:tracts},
+        {classy:'targets', data:targets},
+        {classy:'territory', data:territory}
         // {classy:'terrain', data:terrain}
     ];
 
@@ -123,9 +122,9 @@ async function main() {
         // .addLayer( 'terrain', Contour()
         //     .projection( atlas.projection() )
         //     .classifier( d=>`h${d.value}` ) )
-        // .addLayer( 'territory', Contour()
-        //     .projection( atlas.projection() )
-        //     .classifier( d=>`tract${d.properties.TRACTCE}`) )
+        .addLayer( 'territory', Contour()
+            .projection( atlas.projection() )
+            .classifier( d=>`tract${d.properties.TRACTCE}`) )
         .addLayer( 'targets', Stamp()
             .position( function(d) {return atlas.sphere2screen([d.lon, d.lat]);} )
             .classifier( d=>d.class )

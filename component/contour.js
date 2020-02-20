@@ -47,8 +47,7 @@ export default function( projection ) {
     */
     contour.projection = function(f) {
         if (!f || f==undefined)
-            return projection;
-        projection = f;
+            return path.projection();
         path = d3.geoPath().projection(f);
         return contour;
     }
