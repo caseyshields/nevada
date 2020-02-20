@@ -35,10 +35,13 @@
     </style>
 </head>
 <body>
-    <svg id="atlas"
+    <svg id="visualization"
     width="400"
     viewBox="0 0 500 600"
     preserveAspectRatio="xMidYMid meet">
+        <g class="atlas">
+            
+        </g>
         <defs>
             <g id="source">
                 <title> Source </title>
@@ -50,8 +53,6 @@
                 <desc> A glyph representing a sink. </desc>
                 <path d="M10,0 H-10 M0,10 V-10"></path>
             </g>
-            <!-- modern browsers can use defs in external svg files; we might want to switch to this approach as we accumulate a design library of glyphs! -->
-            <!-- Example use : <use x="480" y="250" xlink:href="#sink" fill="none" stroke="#F00" stroke-width="3" /> -->
         </defs>
     </svg>
     <h3 class="coordinates"></h3>
@@ -83,7 +84,7 @@ import Navigation from './navigation.js';
 main();
 async function main() {
 
-    let svg = d3.select('svg#atlas');
+    let svg = d3.select('svg#visualization > g.atlas');
     let coordinates = d3.select('.coordinates');
     let info = d3.select('.info');
 
@@ -126,7 +127,7 @@ async function main() {
         //     .projection( atlas.projection() )
         //     .classifier( d=>`tract${d.properties.TRACTCE}`) )
         .addLayer( 'targets', Stamp()
-            .transform( atlas.projection() )
+            .position( function(d) {return atlas.sphere2screen([d.lon, d.lat]);} )
             .classifier( d=>d.class )
             .glyph( d=>d.glyph )
             .clicker( showInfo ) );
@@ -140,44 +141,11 @@ async function main() {
     }
 
     atlas(svg, state);
+    //atlas.repaint();
 }
 
 </script>
-    <!-- <script type="module" >
-        import Atlas from './map.js';
-        let svg = d3.select("svg#svg-map");
-        let coordinates = d3.select(".coordinates");
-        let info = d3.select(".info");
-        let w = +svg.attr("width");
-        let h = +svg.attr("height");
-        let pins = [];
-
-        // Mark each intersection of integer longitude and latitude
-        for (let x=-120; x<=-114; x++)
-            for (let y=35; y<=42; y++)
-                pins.push( {lon:x, lat:y, class:'stitches', glyph:'sink'} );
-        // lets me visually check marks and contours have the same projection
-
-        let map = Atlas(svg, {} )
-            .tracks( pins )
-            .click( function (mark, index, selection) {
-                info.html( JSON.stringify(mark) );
-                // I want to stop propagation to the background if user clicks something in the foreground
-                d3.event.stopPropagation(); // should I include this by default in a handler wrapper?
-            } )
-            .move( function() {
-                let screen = d3.mouse( this );
-                let sphere = map.screen2sphere( screen );
-                coordinates.html( sphere );
-            });
-        map();
-
-        // let elevationScale = d3.scaleLinear()
-        //     .range(['#222', '#ddd'])
-        //     .domain([-100, 4400]);
-        // map.setColorScale( elevationScale );
-
-        // add the prepared 2017 tract data
+    <!--// add the prepared 2017 tract data
         d3.json( 'data/2017tractsNV.json' )
             .then( map.addBounds );
 

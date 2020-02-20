@@ -6,10 +6,14 @@ export default createAtlas;
  * When rendering, the Atlas applies the camera transform to each layer and
  * recurses; invoking the D3 general update pattern on the layer's component
  * using the associated dataset.
- * @param {string} svg - A D3 selection holding the svg where the map will be rendered
+ * @param {string} selection - A D3 selection holding the empty SVG Group where the atlas will be rendered
  * @param {Object} params - A object containing initial setting of the component
  */
 function createAtlas(selection, params) {
+
+    // TODO should the component create it's own group?
+    // let selection = svg.append('g')
+    //     .attr('class', 'atlas');
 
     /** default configuration arguments for the map component */
     let args = {
@@ -25,9 +29,9 @@ function createAtlas(selection, params) {
     let toCenter = [ -(lt[0]+rb[0])/2.0, -(lt[1]+rb[1])/2.0];
     let tMercator = 
         d3.geoTransverseMercator()
+            //.clipExtent( screenBounds );
             .rotate( toCenter )
-            .scale( args.worldScale )
-            ;//.clipExtent( screenBounds );
+            .scale( args.worldScale );
 
     // D3.path can generate various viewport geometries from raw geometries by applying a projection
     let path = d3.geoPath().projection( tMercator );
@@ -58,7 +62,9 @@ function createAtlas(selection, params) {
 
         // select all layers which belong to the atlas
         let layers = selection.selectAll('g')
-            .data( data, d=>d?d.classy : select(this).attr('class') );
+            .data( data, function(d) {
+                return d ? d.classy : d3.select(this).attr('class');
+            } );
         // then join them to the data, indexed by class, defaulting to the Dom class
 
         //D3 General Update Pattern
@@ -124,7 +130,7 @@ function createAtlas(selection, params) {
             // applly the camera transform to all non-overlay layers
             selection.selectAll('g')
                 .each( function(d) {
-                    let component = components[d.classy];
+                    let component = index[d.classy];
                     if(!component.overlay)
                         d3.select(this).attr('transform', d3.event.transform.toString());
                 })
@@ -200,7 +206,7 @@ function createAtlas(selection, params) {
      */
     atlas.sphere2screen = function(sphere) {
         let view = tMercator(sphere);
-        let t = d3.zoomTransform(atlas.node());
+        let t = d3.zoomTransform( selection.node() );
         let screen = [
             view[0]*t.k + t.x,
             view[1]*t.k + t.y

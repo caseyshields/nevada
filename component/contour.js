@@ -25,9 +25,9 @@ export default function( projection ) {
      * @param {Array} data - the GeoJson data array the component will render
      */
     function contour(parent, data) {
-        // TODO consider projecting and quantizing to make DOM smaller;
-        let projected = d3.geoProject(data, projection);
-        let approximated = d3.geoQuantize( projected, digits);
+        // // TODO consider projecting and quantizing to make DOM smaller;
+        // let projected = d3.geoProject(data, projection);
+        // let approximated = d3.geoQuantize( projected, digits);
 
         // D3 general update pattern; join the DOM selection to the data
         let selection = parent.selectAll('path').data(data);

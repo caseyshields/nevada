@@ -1,12 +1,13 @@
 /** A component which clones embedded SVG definitions with the 'use' tag.
+ * Also provides customizable styling and mouse click actions.
  * @param {string} id - The id of the definition tag we are cloning
  */
-export default function(id) {
+export default function() {
 
-    let classifier;
-    let clicker;
-    let glyph;
-    let transform;
+    let classifier = d=>d.style;
+    let glyph = d=>d.use;
+    let position = d=>d;
+    let clicker = d=>{};
 
     function stamp(parent, data) {
 
@@ -14,32 +15,32 @@ export default function(id) {
         let stamps = parent.selectAll('use')
             .data(data)
 
-        // remove Dom nodes which have no corresponding data
+        // remove DOM nodes which have no corresponding data
         stamps.exit().remove();
 
-        // create Dom nodes for datums without a node
+        // create DOM nodes for datums without a node
         stamps = stamps.enter()
             .append('use')
                 .on('click', clicker)
-            // and now modify the Dom nodes to match the datums
+            // and now modify the DOM nodes to match the datums
             .merge(stamps).each( function(d) {
-                let screen = transform(d);
+                let p = position(d);
                 d3.select(this)
-                    .attr('x', screen[0])
-                    .attr('y', screen[1])
+                    .attr('x', p[0])
+                    .attr('y', p[1])
                     .attr('class', classifier)
-                    .attr('xlink:xlink:href', '#'+glyph)
+                    .attr('xlink:xlink:href', '#'+glyph(d))
             });
     }
 
-    /** a D3 style mutator for the D3 transform function
-     * @param {function} t - a function of the form f(d)=[x,y]
+    /** a D3 style mutator for the position of the Stamp
+     * @param {function} t - a function of the form f(d)=>[x,y]
      * @return {Object} the stamp object for the fluent programming style
      */
-    stamp.transform = function(t) {
+    stamp.position = function(t) {
         if (!t || t==undefined)
-            return this.transform;
-        else transform = t;
+            return this.position;
+        else position = t;
         return stamp;
     }
 
@@ -76,5 +77,10 @@ export default function(id) {
         return stamp;
     }
 
+    // mark the component so camera transforms are not applied to it's rendered group
+    stamp.overlay = true; // TODO shouldn't this be an attribute of the layer data and not the component?...
+
     return stamp;
+
+    //TODO Might eventually want a method to procedurally add an icon to the SVG defs
 }
