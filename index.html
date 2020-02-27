@@ -62,20 +62,27 @@
     <h4 class="overlay info"></h3>
     <details class="overlay">
         <summary>Details</summary>
-        <p> An D3 map with a terrain layer and an content layer. The terrain is projected flat,
-            and the camera is moved and zoomed using CSS transforms. The content layer is semantically zoomed 
-            by moving arond svg glyphs, without scaling them. Conversion from screen to viewport to spherical
-            coordinates is handled for the user.
+        <p> A map of Nevada's terrain and census tracts. The tracts come from the 2017 census, and
+            the contours were computed from The Shuttle Radar Topography Mission data using D3.
         </p>
-        <p> There is some customizable interactivity. In this example moving the mouse gives you the 
-            current spherical coordinates. Clicking on a marker reveals the content of the object being
-            displayed. In this example, grey stitches were placed at the corners of the SRTM raster tiles the
-            terrain contours were computed from.
+        <p> This visualization is a composite of D3 components. An 'Atlas' component holds a geographic 
+            projection, a camera transform, and a stack of components which are rendered in order. It
+            is a D3 style component, and it applied the General Update Pattern recursively to it's
+            constituent components.
         </p>
-        <p> Elevation data was obtained from an old version of the Shuttle Radar Topography Mission, and the 
-            territories displayed were taken from the 2017 US census tracts. The precomputed geometries are
-            loaded and displayed asynchronously as they arrive. The displayed glyphs are embedded SVG defs,
-            and can be styled with CSS.
+        <p> A 'Contour' component is added twice; Once to draw the territories, and once to draw the 
+            elevation contours. The only difference between them is the CSS styling in fill and stroke.
+            They are loaded asynchronously and the map is refreshed as they arrive.
+        </p>
+        <p> A 'Stamp' component clones SVG definitions. In this case, I put a '+'-shaped marker at every
+            corner of the original SRTM raster tiles. Notice how the markers do not change size as you
+            zoom in and out on the terrain? Layers can be marked so the Atlas does not apply its 
+            transforms to them, which is useful for overlays.
+        </p>
+        <p> Mouse interactivity can be added to any component. In this example mouse movement calculates
+            the geodetic coordinates of the pointer using the inverse of the Atlas's transforms. 
+            Carefully clicking on a Stamp marker will printout the the data contents of that marker in
+            the bottom left corner of the screen.
         </p>
     </details>
 <script type="module">
@@ -98,24 +105,27 @@ async function main() {
             targets.push( {lon:x, lat:y, class:'target', glyph:'sink'} );
     // lets me visually check marks and contours have the same projection
 
-    // load the GeoJson census tract features
-    let tracts = await d3.json('data/2017tractsNV.json');
-    let territory = tracts.features;
-
-    // load elevation contours
-    let terrain = [{type:'Sphere', value:0}];
-    for (let m=0; m<=4000; m+=500) {
-        let elevation = await d3.json(`data/N35W120H${m}.json`);
-        terrain.push(elevation);
-    }
-    //TODO let these load asynchronously then add them to the atlas and refresh!
-    
-    let state = [
-        {classy:'targets', data:targets},
-        {classy:'territory', data:territory},
-        {classy:'terrain', data:terrain}
+    // a list of GeoJson Files to load elevation countours from in ascending order
+    let files = [
+        `data/N35W120H0.json`,
+        `data/N35W120H500.json`,
+        `data/N35W120H1000.json`,
+        `data/N35W120H1500.json`,
+        `data/N35W120H2000.json`,
+        `data/N35W120H2500.json`,
+        `data/N35W120H3000.json`,
+        `data/N35W120H3500.json`,
+        `data/N35W120H4000.json`
     ];
 
+    // The initial state. We'll asynchronously add data to it as large files load
+    let state = [
+        {classy:'targets', data:targets},
+        {classy:'territory', data:[]},
+        {classy:'terrain', data:[{type:'Sphere', value:0}]}
+    ];
+
+    // Construct the map by compositing components
     let atlas = Atlas(svg, {})
         .move( function() {
             let screen = d3.mouse(this);
@@ -127,10 +137,10 @@ async function main() {
     atlas
         .addLayer( 'terrain', Contour()
             .projection( atlas.projection() )
-            .classifier( d=>`h${d.value}` ) )
+            .classifier( d=> (d==undefined || d==null) ? null : `h${d.value}` ) )
         .addLayer( 'territory', Contour()
             .projection( atlas.projection() )
-            .classifier( d=>`tract${d.properties.TRACTCE}`) )
+            .classifier( d=>(d==undefined) ? null : `tract${d.properties.TRACTCE}`) )
         .addLayer( 'targets', Stamp()
             .position( function(d) {return atlas.sphere2screen([d.lon, d.lat]);} )
             .classifier( d=>d.class )
@@ -145,14 +155,35 @@ async function main() {
         info.html(`<pre>${json}</pre>`);
     }
 
+    // initial render
     atlas(svg, state);
+
+    // load the GeoJson census tract features asynchronously
+    d3.json('data/2017tractsNV.json')
+        .then( function(tracts) {
+            state[1].data = tracts.features;
+            atlas(svg, state);
+        } );
+    
+    // load the elevation contours asyncronously, but one after the other
+    loadNext( state[2].data );
+    function loadNext(contours) {
+        if (contours.length == files.length+1)
+            return;
+        d3.json( files[contours.length-1] )
+            .then( function(elevation) {
+                contours.push( elevation );
+                atlas(svg, state);
+                loadNext( contours )
+            } );
+    }
 }
 // // default color scale for elevation, cribbed from 'https://en.wikipedia.org/wiki/Wikipedia:WikiProject_Maps/Conventions', though there are no given corresponding heights...
-    // let color = d3.scaleQuantize()
-    //     .range(['#ACD0A5','#94BF8B','#A8C68F','#BDCC96','#D1D7AB','#E1E4B5',//green to tan
-    //     '#EFEBC0','#E8E1B6','#DED6A3','#D3CA9D','#CAB982','#C3A76B','#B9985A','#AA8753',//tan to brown
-    //     '#AC9A7C','#BAAE9A','#CAC3B8','#E0DED8','#F5F4F2'])// brown to white
-    //     .domain([-100, 4400]);
+// let color = d3.scaleQuantize()
+//     .range(['#ACD0A5','#94BF8B','#A8C68F','#BDCC96','#D1D7AB','#E1E4B5',//green to tan
+//     '#EFEBC0','#E8E1B6','#DED6A3','#D3CA9D','#CAB982','#C3A76B','#B9985A','#AA8753',//tan to brown
+//     '#AC9A7C','#BAAE9A','#CAC3B8','#E0DED8','#F5F4F2'])// brown to white
+//     .domain([-100, 4400]);
 </script>
 </body>
 </html>
