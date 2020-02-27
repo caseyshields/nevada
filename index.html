@@ -61,7 +61,7 @@
     <h4 class="overlay coordinates"></h3>
     <h4 class="overlay info"></h3>
     <details class="overlay">
-        <summary>Details</summary>
+        <summary>Composite D3 Components</summary>
         <p> A map of Nevada's terrain and census tracts. The tracts come from the 2017 census, and
             the contours were computed from The Shuttle Radar Topography Mission data using D3.
         </p>
@@ -82,8 +82,13 @@
         <p> Mouse interactivity can be added to any component. In this example mouse movement calculates
             the geodetic coordinates of the pointer using the inverse of the Atlas's transforms. 
             Carefully clicking on a Stamp marker will printout the the data contents of that marker in
-            the bottom left corner of the screen.
+            the bottom left corner of the screen. Dragging and scrolling updates the camera transform 
+            using D3.Zoom.
         </p>
+        <p> Compositing components and then attaching behavior to them in this way makes extensibility 
+            and code reuse much easier. Though I'm not sure I got the container interface polished 
+            enough, I still think I got the right idea for more complex dashboards or subtly different
+            customer needs.</p>
     </details>
 <script type="module">
 import Atlas from './container/atlas.js';
