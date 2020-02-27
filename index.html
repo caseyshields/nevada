@@ -67,12 +67,13 @@
         </p>
         <p> This visualization is a composite of D3 components. An 'Atlas' component holds a geographic 
             projection, a camera transform, and a stack of components which are rendered in order. It
-            is a D3 style component, and it applied the General Update Pattern recursively to it's
+            is a D3 style component which applies the General Update Pattern recursively to it's
             constituent components.
         </p>
-        <p> A 'Contour' component is added twice; Once to draw the territories, and once to draw the 
-            elevation contours. The only difference between them is the CSS styling in fill and stroke.
-            They are loaded asynchronously and the map is refreshed as they arrive.
+        <p> The 'Contour' component creates projected SVG paths. It is added twice to the Atlas; Once
+            to draw the territories, and once to draw the elevation contours. The only difference 
+            between them is the CSS styling for fill and stroke. They are loaded asynchronously and 
+            the map is refreshed as they arrive.
         </p>
         <p> A 'Stamp' component clones SVG definitions. In this case, I put a '+'-shaped marker at every
             corner of the original SRTM raster tiles. Notice how the markers do not change size as you
